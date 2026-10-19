@@ -56,6 +56,9 @@ def ar1_prec(Tm1, rho, sd_eta):
     Q = np.zeros((Tm1, Tm1))
     if Tm1 == 0:
         return Q
+    if Tm1 == 1:
+        Q[0, 0] = q * (1 - rho**2)
+        return Q
     Q[0, 0] = q
     for i in range(1, Tm1):
         Q[i, i] += q * (1 + rho**2) if i < Tm1 - 1 else q
@@ -98,7 +101,7 @@ def theta_posterior(phi, df, T):
     return cov @ r, cov
 
 
-def make_model(df, T):
+def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6):
     m_arr = df["m"].to_numpy().astype(int)
     t_arr = df["t"].to_numpy().astype(int)
     y_arr = df["y"].to_numpy()
@@ -106,12 +109,15 @@ def make_model(df, T):
     nobs = len(df)
 
     def model():
-        mu0 = numpyro.sample("mu0", dist.Normal(jnp.log(26279.0), 0.6))
+        mu0 = numpyro.sample("mu0", dist.Normal(jnp.log(26279.0), mu0_scale))
         c = numpyro.sample("c", dist.Normal(0.02, 0.03))
         rho_raw = numpyro.sample("rho_raw", dist.Normal(0.0, 1.0))
         rho = jax.nn.sigmoid(rho_raw) * 0.7 + 0.28   # in (0.28, 0.98)
         sd_eta = numpyro.sample("sd_eta", dist.HalfNormal(0.12))
-        logB_f = numpyro.sample("logB_f", dist.Normal(0.0, 0.25).expand([M - 1]))
+        if unit_slopes:
+            logB_f = numpyro.deterministic("logB_f", jnp.zeros(M - 1))
+        else:
+            logB_f = numpyro.sample("logB_f", dist.Normal(0.0, 0.25).expand([M - 1]))
         b_f = numpyro.sample("b_f", dist.Normal(0.0, 0.4).expand([M - 1]))
         log_sd_m_free = numpyro.sample(
             "log_sd_m_free",
@@ -146,19 +152,28 @@ def make_model(df, T):
         sd_obs = sd_m[m_arr]
         H = jnp.zeros((nobs, T)).at[jnp.arange(nobs), t_arr].set(coef)
         mean_y = H @ pm + off
-        cov_y = H @ cov_theta @ H.T + jnp.diag(sd_obs**2)
+        R_obs = jnp.diag(sd_obs**2)
+        # Optional sensitivity: serial observation error in the digitized series.
+        # The default remains the archived v2c likelihood (independent errors).
+        if gao_corr:
+            same_gao = (m_arr[:, None] == 1) & (m_arr[None, :] == 1)
+            lag = np.abs(t_arr[:, None] - t_arr[None, :])
+            corr_extra = np.where(same_gao & (lag > 0), gao_corr**lag, 0.0)
+            R_obs = R_obs + sd_obs[:, None] * sd_obs[None, :] * jnp.asarray(corr_extra)
+        cov_y = H @ cov_theta @ H.T + R_obs
         numpyro.sample("y", dist.MultivariateNormal(mean_y, covariance_matrix=cov_y),
                        obs=y_arr)
         numpyro.deterministic("rho", rho)
     return model
 
 
-def main():
+def main(mu0_scale=0.6, seed=45, out_suffix="v2c", state_seed=45001):
     df = load_obs()
     M = len(FIT_SOURCES)
-    mcmc = MCMC(NUTS(make_model(df, T)), num_warmup=1500, num_samples=1500,
+    tag = "" if out_suffix == "v2c" else f"_{out_suffix}"
+    mcmc = MCMC(NUTS(make_model(df, T, mu0_scale=mu0_scale)), num_warmup=1500, num_samples=1500,
                 num_chains=1, progress_bar=False)
-    mcmc.run(jax.random.PRNGKey(45))
+    mcmc.run(jax.random.PRNGKey(seed))
     smp = mcmc.get_samples()
     mcmc.print_summary(exclude_deterministic=False)
 
@@ -168,20 +183,21 @@ def main():
     logB_all = np.concatenate([np.zeros((S, 1)), np.asarray(smp["logB_f"])[take]], 1)
     b_all = np.concatenate([np.zeros((S, 1)), np.asarray(smp["b_f"])[take]], 1)
     lsd = np.asarray(smp["log_sd_m_free"])
+    state_rng = np.random.default_rng(state_seed)
     for si, s in enumerate(take):
         phis = dict(mu0=float(smp["mu0"][s]), c=float(smp["c"][s]),
                     rho=float(smp["rho"][s]), sd_eta=float(smp["sd_eta"][s]),
                     logB=logB_all[si], b=b_all[si],
                     log_sd_m=np.concatenate([lsd[s][:1], [np.log(0.07)], lsd[s][1:]]))
         mth, cth = theta_posterior(phis, df, T)
-        draws[:, si] = np.random.multivariate_normal(mth, cth)
+        draws[:, si] = state_rng.multivariate_normal(mth, cth)
     theta_bar = float(np.mean(draws))
     r_m = (np.exp(logB_all) - 1.0) * theta_bar + b_all
 
     med, lo, hi = np.quantile(draws, [0.5, 0.05, 0.95], axis=1)
     post = pd.DataFrame({"year": YEARS, "median_wt": np.exp(med),
                          "lo90_wt": np.exp(lo), "hi90_wt": np.exp(hi)}).round(0)
-    post.to_csv(RES / "china_national_posterior_v2c.csv", index=False,
+    post.to_csv(RES / f"china_national_posterior{tag}.csv", index=False,
                 encoding="utf-8-sig")
     print(post.to_string(index=False))
 
@@ -198,7 +214,7 @@ def main():
                        if mi > 1 else
                        float(np.median(np.exp(np.asarray(smp["log_sd_m_free"])[:, 0]))))))
     sb = pd.DataFrame(rows)
-    sb.to_csv(RES / "china_source_bias_v2c.csv", index=False, encoding="utf-8-sig")
+    sb.to_csv(RES / f"china_source_bias{tag}.csv", index=False, encoding="utf-8-sig")
     print("\nsource bias (v2):"); print(sb.round(3).to_string(index=False))
 
     # forecast with mean reversion: g decays to c at rate rho
@@ -207,25 +223,30 @@ def main():
     print(f"P(theta_2014 > 15亿吨) = {(draws[t2014] > np.log(150000.)).mean():.3f}")
 
     F = 6
-    fut = np.empty((F, S))
+    R = 50  # simulated continuations per posterior draw
+    fut = np.empty((F, S * R))
     rng = np.random.default_rng(1)
     for si, s in enumerate(take):
-        c, rho, sd_eta = float(smp["c"][s]), float(smp["rho"][s]), \
-            float(smp["sd_eta"][s])
-        g = draws[T - 1, si] - draws[T - 2, si]
-        th = draws[T - 1, si]
-        path = []
-        for k in range(F):
-            g = c + rho * (g - c) + rng.normal(0, sd_eta)
-            th = th + g
-            path.append(th)
-        fut[:, si] = path
+        c, rho, sd_eta = float(smp["c"][s]), float(smp["rho"][s]), float(smp["sd_eta"][s])
+        g0 = draws[T - 1, si] - draws[T - 2, si]
+        th0 = draws[T - 1, si]
+        for r in range(R):
+            g, th = g0, th0
+            for k in range(F):
+                g = c + rho * (g - c) + rng.normal(0, sd_eta)
+                th = th + g
+                fut[k, si * R + r] = th
     fm, flo, fhi = np.quantile(fut, [0.5, 0.05, 0.95], axis=1)
     fc = pd.DataFrame({"year": list(range(2025, 2031)), "median_wt": np.exp(fm),
                        "lo90_wt": np.exp(flo), "hi90_wt": np.exp(fhi)}).round(0)
-    fc.to_csv(RES / "china_forecast_v2c.csv", index=False, encoding="utf-8-sig")
+    fc.to_csv(RES / f"china_forecast{tag}.csv", index=False, encoding="utf-8-sig")
     print("\nforecast v2 (mean-reverting):"); print(fc.to_string(index=False))
-    np.save(RES / "china_theta_draws_v2c.npy", draws)
+    np.save(RES / f"china_theta_draws{tag}.npy", draws)
+    np.save(RES / f"china_hyper_draws{tag}.npy",
+            np.column_stack([np.asarray(smp["c"])[take],
+                             np.asarray(smp["rho"])[take],
+                             np.asarray(smp["sd_eta"])[take]]))
+    np.save(RES / f"china_forecast_draws{tag}.npy", np.exp(fut))
     print(f"\nrho posterior: mean={float(np.mean(smp['rho'])):.3f}  "
           f"c (long-run growth): mean={float(np.mean(smp['c'])):.4f}")
     print("saved results/china_*_v2.*")

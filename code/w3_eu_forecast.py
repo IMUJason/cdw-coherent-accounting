@@ -47,8 +47,8 @@ def run_window(df_all, years, train_last, pred_year, tag, seed):
         d = np.exp(draws[c * T + t_pred, :])
         lo, medd, hi = np.quantile(d, [0.05, 0.5, 0.95])
         # persistence: last observed TOTAL_HH for this country
-        hist = df_tr[(df_tr["c"] == c) & (df_tr["m"] == 0)]["y"]
-        pers = float(np.exp(hist.max())) if len(hist) else np.nan
+        hist = df_tr[(df_tr["c"] == c) & (df_tr["m"] == 0)].sort_values("time")["y"]
+        pers = float(np.exp(hist.iloc[-1])) if len(hist) else np.nan
         alpha = 0.10
         iscore = (hi - lo) + (2 / alpha) * (lo - tru) * (tru < lo) \
             + (2 / alpha) * (tru - hi) * (tru > hi)
@@ -57,13 +57,13 @@ def run_window(df_all, years, train_last, pred_year, tag, seed):
                          covered=bool(lo <= tru <= hi),
                          int_score=iscore / 1e6,
                          model_err_pct=(medd - tru) / tru * 100,
-                         pers_err_pct=(pers - tru) / tru * 100))
+                         persistence_err_pct=(pers - tru) / tru * 100))
     out = pd.DataFrame(rows)
     out.to_csv(RES / f"eu_forecast_{tag}.csv", index=False)
     cov = out["covered"].mean()
     print(f"[{tag}] coverage={cov:.3f} ({out['covered'].sum()}/{len(out)})  "
           f"median|err| model={out['model_err_pct'].abs().median():.1f}%  "
-          f"persistence={out['pers_err_pct'].abs().median():.1f}%  "
+          f"persistence={out['persistence_err_pct'].abs().median():.1f}%  "
           f"mean IS={out['int_score'].mean():.1f} Mt")
     return out
 

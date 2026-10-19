@@ -1,0 +1,17 @@
+{
+  "k_cap": 24.339654897968835,
+  "capex_cny": 41867600.0,
+  "cap_t_per_yr": 175200.0,
+  "crf": 0.10185220882315059,
+  "n_draws": 37500,
+  "C_point": 2.5669001774246762,
+  "C_star": 2.7006605418834053,
+  "C_grid": 2.700485853100886,
+  "F_star": 0.588836209183593,
+  "cost_point": 36.89015581819524,
+  "cost_bayes": 36.63241412644899,
+  "threshold_c_pen_star_low": 51.17930979593767,
+  "threshold_c_pen_star_high": 93.67930979593767,
+  "old_path_mean_optimum": 2.7578544224410506,
+  "note": "annual-loss target per R5 \u00a73.2; point plan = median of the year-marginal predictive mixture (documented convention)"
+}

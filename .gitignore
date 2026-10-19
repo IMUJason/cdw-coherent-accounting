@@ -3,3 +3,5 @@ __pycache__/
 *.log
 .ipynb_checkpoints/
 data/source_pdfs/*.pdf
+results/figures/
+results/fig_audit/
