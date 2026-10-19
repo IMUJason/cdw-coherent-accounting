@@ -41,33 +41,38 @@ fig, axes = plt.subplots(1, 2, figsize=(140 * MM, 55 * MM),
 ax = axes[0]
 rows = {int(r.year): r for _, r in post.iterrows()}
 xs, meds, los, his = [], [], [], []
-for k, yr in enumerate([2023, 2024]):
+for k, yr in enumerate([2022, 2023, 2024]):
     r = rows[yr]
-    xs.append(k)
+    xs.append(k - 1)
     meds.append(r.median_wt / 1e5)
     los.append(r.lo90_wt / 1e5)
     his.append(r.hi90_wt / 1e5)
 ax.errorbar(xs, meds, yerr=[np.array(meds) - los, np.array(his) - meds],
             fmt="o", ms=4, color=NPG["blue"], capsize=3, lw=1.0,
-            label="posterior (90% PI)")
+            label="posterior (90% interval)")
 # external points
 ax.scatter([-0.24], [2.39], marker="^", s=34, color=NPG["red"], zorder=4,
-           label="Gao et al. 2023 forecast (same source)")
+           label="Gao 2023 forecast (same source)")
 ax.scatter([0.76], [2.31], marker="s", s=30, color=NPG["green"], zorder=4,
            label="2024 anchor, withheld")
+# cross-tradition market estimate at 2022
+ax.scatter([-1.24], [2.75], marker="*", s=52, color=NPG["gold"],
+           edgecolors="#5A5F6A", linewidths=0.4, zorder=4,
+           label="2022 market estimate (NBS-lineage)")
 # hold-out refit result
 ho = ext[ext.test == "A_holdout_2024"].iloc[0]
 ax.errorbar([1.28], [ho.median_Gt],
             yerr=[[ho.median_Gt - ho.lo_Gt], [ho.hi_Gt - ho.median_Gt]],
             fmt="D", ms=3.6, mfc="white", mec=NPG["dusty"], ecolor=NPG["dusty"],
-            capsize=3, lw=0.9, label="2024 refit without that anchor")
-ax.set_xticks([0, 1, 1.46])
-ax.set_xticklabels(["2023", "2024", "2024\n(refit)"])
-ax.set_xlim(-0.45, 1.75)
+            capsize=3, lw=0.9, label="2024 refit (anchor withheld)")
+ax.set_xticks([-1, 0, 1, 1.46])
+ax.set_xticklabels(["2022", "2023", "2024", "2024\n(refit)"])
+ax.set_xlim(-1.5, 1.75)
 ax.set_ylabel("National CDW generation (Gt)")
-ax.set_ylim(1.95, 3.05)
-ax.legend(frameon=False, loc="upper center", fontsize=5.4, ncol=1,
-          handletextpad=0.5, borderaxespad=0.2)
+ax.set_ylim(1.95, 3.58)
+ax.legend(frameon=True, facecolor="white", framealpha=0.95, edgecolor="none",
+          loc="upper left", fontsize=5.0, ncol=1,
+          handletextpad=0.5, borderaxespad=0.3)
 ax.set_title("Consistency checks", loc="left")
 ax.text(-0.20, 1.05, "a", transform=ax.transAxes, fontsize=8, fontweight="bold")
 
