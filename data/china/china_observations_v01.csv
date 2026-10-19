@@ -9,7 +9,7 @@ CN-007,national,全国,2024,69000.0,资源化利用量,建筑垃圾总量,unknow
 CN-008,national,全国,2024,44000.0,填埋量,建筑垃圾总量,unknown,official_aggregate,meescc_2025,官方统计汇总,https://www.meescc.cn/zhxx/zxyw/202603/W020260317610986472151.pdf,基于207城
 CN-009,national,全国,2024,133000.0,处理能力,处理设施,n/a,disposal_capacity,meescc_2025,官方统计汇总,https://www.meescc.cn/zhxx/zxyw/202603/W020260317610986472151.pdf,4262座设施，基于216城——处置端观测过程
 CN-010,national,全国,2023,300000.0,产生量,建筑垃圾总量,yes,official_wide,mee_draft_2025,官方文件,https://www.mee.gov.cn/xxgk2018/xxgk/xxgk06/202504/W020250415370988316064.pdf,'超过30亿吨'取下限；占城市垃圾总量40%+；法定5类：渣土/泥浆/工程/拆除/装修
-CN-011,national,全国,2014,150000.0,产生量,建筑垃圾总量,unknown,industry_assoc,cdw_alliance,行业协会,http://www.fqwzyhlm.org/,'超15亿吨'取下限
+CN-011,national,全国,2014,150000.0,产生量,建筑垃圾总量,unknown,industry_assoc,cdw_alliance,行业协会,https://www.chinanews.com/ny/2015/03-03/7096132.shtml,《我国建筑垃圾资源化产业发展报告(2014年度)》超15亿吨取下限；报告另引15.5-24亿吨/年区间
 CN-012,national,全国,2017,159300.0,产生量,建筑垃圾总量,unknown,industry_assoc,envirunion_2017,行业协会估算,http://www.envirunion.com/newsinfo-14398.html,中国环联；另有19.3亿吨的同年并列估计（口径待核）
 CN-013,national,全国,2008,236000.0,产生量,建筑垃圾总量,unknown,academic_WGR_MFA,zheng_2017,学术估算,https://www.sciencedirect.com/science/article/abs/pii/S0950061817300703,2003-2013年均约23.6亿吨（每年），weight-per-construction-area法，拆除占97%(2013)；已核实 DOI 10.1016/j.conbuildmat.2017.01.055；与gao_2025同期差~2.8倍属口径/系数差异，由模型偏差因子吸收
 CN-014,national,全国,2022,240000.0,产生量,建筑垃圾总量,unknown,academic_WGR,wang_2022,学术估算,https://pmc.ncbi.nlm.nih.gov/articles/PMC10108335/,政策综述转引'约24亿吨/年'(引Duan 2019等)；注意16.75/3.7为武汉市数字非全国；已核实 DOI 10.1177/0734242X221126393 (WM&R 41(4):914-923)

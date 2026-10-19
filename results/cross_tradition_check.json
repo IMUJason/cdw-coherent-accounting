@@ -1,0 +1,18 @@
+{
+  "investni2022": {
+    "value_Gt": 2.75,
+    "year": 2022,
+    "posterior_percentile": 0.9853333333333333,
+    "posterior_median_Gt": 2.332132050068005,
+    "ratio_to_median": 1.179178511748428,
+    "broad_official_ratio_v2c": 1.2507,
+    "note": "NBS-lineage market estimate; not in the fit"
+  },
+  "an2024century": {
+    "cumulative_Bt_2000_2100": 224.08,
+    "century_average_Gt_per_yr": 2.218613861386139,
+    "posterior_mean_Gt_2020_2024": 2.316398,
+    "difference_pct": 4.4074428775437235,
+    "note": "dynamic MFA; not in the fit"
+  }
+}

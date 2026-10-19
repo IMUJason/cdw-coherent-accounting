@@ -33,6 +33,7 @@ code/                            analysis code (run order = pipeline order)
   review_r5_validation.py        two-chain convergence diagnostic and sensitivity cases
   decision_value_annual.py       annual-loss capacity decision and sensitivity grid
   external_consistency.py        2024-anchor holdout and same-source forecast consistency check
+  cross_tradition_check.py       place out-of-fit national figures (NBS-lineage 2022, dynamic-MFA average) under the posterior
   mu0_sensitivity.py             initial-level prior sensitivity (mu0 sd 0.6 -> 1.8)
   make_figures_v2.py             manuscript figures 1-6
   make_fig7.py                   manuscript figure 7 (consistency + decision value)
@@ -140,6 +141,7 @@ Runtimes are for a single modern CPU core (JAX may spawn additional threads).
 | `results/review_r5/china_base_run.json`, `china_base_diagnostics.csv` | `review_r5_validation.py base` (two-chain convergence diagnostic) |
 | `results/decision_value_annual*.csv/.json` | `decision_value_annual.py` |
 | `results/external_consistency.csv` | `external_consistency.py` |
+| `results/cross_tradition_check.json` | `cross_tradition_check.py` |
 | `results/ar_bootstrap_baseline.csv` | `ar_bootstrap_baseline.py` |
 
 ## Notes
