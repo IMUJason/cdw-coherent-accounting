@@ -65,7 +65,8 @@ def draw_phi(rng):
 def sim_theta(phi, rng):
     theta = np.empty(T)
     theta[0] = rng.normal(phi["mu0"], SD0)
-    g = rng.normal(phi["c"], phi["sd_eta"])
+    # stationary AR(1) initial increment, matching theta_prior
+    g = rng.normal(phi["c"], phi["sd_eta"] / np.sqrt(1.0 - phi["rho"] ** 2))
     theta[1] = theta[0] + g
     for t in range(2, T):
         g = phi["c"] + phi["rho"] * (g - phi["c"]) + rng.normal(0, phi["sd_eta"])
@@ -239,8 +240,9 @@ def arm_full(y, seed):
                    rho=float(smp["rho"][s]), sd_eta=float(smp["sd_eta"][s]),
                    logB=np.concatenate([[0.0], np.asarray(smp["logB_f"][s])]),
                    b=np.concatenate([[0.0], np.asarray(smp["b_f"][s])]),
-                   log_sd_m=np.concatenate([[np.log(0.05)], [np.log(0.07)],
-                                            np.asarray(smp["log_sd_m_free"][s])]))
+                   log_sd_m=np.concatenate(
+                       [[np.asarray(smp["log_sd_m_free"][s])[0]], [np.log(0.07)],
+                        np.asarray(smp["log_sd_m_free"][s])[1:]]))
         m, cv = v2c.theta_posterior(phi, df, T)
         draws[:, s] = rng.multivariate_normal(m, cv)
     div = int(np.asarray(mcmc.get_extra_fields()["diverging"]).sum())

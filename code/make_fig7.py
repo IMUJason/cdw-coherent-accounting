@@ -87,22 +87,15 @@ C_point = float(dv.loc[dv.policy.str.startswith("point"), "C_Gt"].iloc[0])
 C_bayes = float(dv.loc[dv.policy.str.startswith("Bayes"), "C_Gt"].iloc[0])
 c_point = float(dv.loc[dv.policy.str.startswith("point"), "cost_per_t"].iloc[0])
 c_bayes = float(dv.loc[dv.policy.str.startswith("Bayes"), "cost_per_t"].iloc[0])
-ax.scatter([C_point], [c_point], s=40, color=NPG["red"], zorder=4,
-           label=f"point plan: {C_point:.2f} Gt")
-ax.scatter([C_bayes], [c_bayes], s=40, color=NPG["green"], zorder=4,
-           label=f"posterior-optimal: {C_bayes:.2f} Gt")
-ax.annotate("", xy=(C_bayes, c_bayes), xytext=(C_point, c_point),
-            arrowprops=dict(arrowstyle="<->", color=NPG["dusty"], lw=0.9))
-ax.text((C_point + C_bayes) / 2 - 0.02, c_bayes + 0.045,
-        f"{C_bayes - C_point:+.2f} Gt\n({(C_bayes - C_point) / C_point * 100:+.1f}%)",
-        ha="center", fontsize=6, color="#5A5F6A")
-ax.axvline(C_point, color=NPG["dusty"], ls=":", lw=0.8)
-ax.text(C_point + 0.04, curves.min() + 0.10, f"median of mixture\n({C_point:.2f} Gt)",
-        fontsize=5.6, color="#5A5F6A", va="bottom")
+ax.scatter([C_point], [c_point], s=40, color=NPG["red"], zorder=4)
+ax.scatter([C_bayes], [c_bayes], s=40, color=NPG["green"], zorder=4)
+ax.text((C_point + C_bayes) / 2, 36.42,
+        f"{C_bayes - C_point:+.2f} Gt ({(C_bayes - C_point) / C_point * 100:+.1f}%)",
+        ha="center", va="top", fontsize=5.8, color="#5A5F6A")
 ax.set_xlabel("Committed processing capacity C (Gt/yr)")
 ax.set_ylabel("Expected cost (CNY/t generated)", labelpad=2)
+ax.set_ylim(36.30, 38.45)
 ax.set_title("Capacity planning under asymmetric loss", loc="left")
-ax.legend(frameon=False, loc="upper center", fontsize=6, ncol=1)
 ax.text(-0.17, 1.05, "b", transform=ax.transAxes, fontsize=8, fontweight="bold")
 
 fig.savefig(FIGS / "fig7_external_decision.pdf")

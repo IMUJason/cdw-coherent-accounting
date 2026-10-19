@@ -11,8 +11,8 @@ Every published figure is treated as a noisy, biased observation of a latent
 quantity; inference is fully Bayesian with the latent states analytically
 collapsed (NUTS on hyperparameters, exact Gaussian conditional for the states).
 Simulation-based calibration on a design matched to the production model shows
-that the collapsed scheme is calibrated (0.922 at the nominal 90% level) where a
-joint MAP plug-in covers 0.477, and that a naive EM plug-in collapses
+that the collapsed scheme is near nominal (0.906 at the nominal 90% level)
+where a joint MAP plug-in covers 0.469, and that a naive EM plug-in collapses
 structurally in this design.
 
 ## Repository layout
@@ -30,6 +30,7 @@ code/                            analysis code (run order = pipeline order)
   sbc_production.py              matched SBC on the production China design (oracle/EM/MAP/full; misspec arm)
   sbc_rerun_emreg.py             prior-ridge EM arm, same seeds (minutes)
   sbc_rerun_emb1.py              B=1 plug-in arm, same seeds (constructively misspecified; minutes)
+  review_r5_validation.py        two-chain convergence diagnostic and sensitivity cases
   decision_value_annual.py       annual-loss capacity decision and sensitivity grid
   external_consistency.py        2024-anchor holdout and same-source forecast consistency check
   mu0_sensitivity.py             initial-level prior sensitivity (mu0 sd 0.6 -> 1.8)
@@ -62,8 +63,8 @@ bibliography, and figure PDFs are not redistributed.
 
 The bundled `data/` files are the exact inputs used for the released results;
 `data/china/china_observations_v01.csv` carries per-observation caliber,
-method-family, credibility grade, source URL, and notes (57 records, 19
-sources; 53 records carry numeric mass values; 30 national-caliber
+method-family, credibility grade, source URL, and notes (58 records, 19
+sources; 54 records carry numeric mass values; 30 national-caliber
 observations across 7 measurement processes are used in fitting).
 
 ## Environment
@@ -93,6 +94,9 @@ python code/digitize_gao_fig3.py
 
 # China production model (~10 min; writes *_v2c outputs)
 python code/w3_china_national_v2c.py
+
+# Two-chain convergence diagnostic (~2 min; matches the appendix)
+python code/review_r5_validation.py base
 
 # Matched SBC (~2 h for 32 replicates; ~50 min for 16 misspecification replicates)
 python code/sbc_production.py main 32
@@ -133,6 +137,7 @@ Runtimes are for a single modern CPU core (JAX may spawn additional threads).
 | `results/china_*_v2s.csv` | `mu0_sensitivity.py` |
 | `results/review_r5/sbc_prod_main*.csv/.json` | `sbc_production.py main 32` + `sbc_rerun_*.py` |
 | `results/review_r5/sbc_prod_misspec*.csv/.json` | `sbc_production.py misspec 16` |
+| `results/review_r5/china_base_run.json`, `china_base_diagnostics.csv` | `review_r5_validation.py base` (two-chain convergence diagnostic) |
 | `results/decision_value_annual*.csv/.json` | `decision_value_annual.py` |
 | `results/external_consistency.csv` | `external_consistency.py` |
 | `results/ar_bootstrap_baseline.csv` | `ar_bootstrap_baseline.py` |
@@ -150,6 +155,10 @@ Runtimes are for a single modern CPU core (JAX may spawn additional threads).
   manuscript: fixed annual capacity, per-year shortfall/idle costs, optimum at
   the equal-weight mixture quantile `(p-k)/(p+h)`. It is not equivalent to
   averaging the 2026–2030 path first.
+- The production China run is single-chain with a fixed seed. The two-chain
+  convergence diagnostic reported in the appendix is
+  `python code/review_r5_validation.py base`; it writes
+  `results/review_r5/china_base_run.json` and `china_base_diagnostics.csv`.
 - `data/source_pdfs/` is intentionally empty: publisher PDFs are not
   redistributed. Download DOI 10.3390/su17041711 to run the digitization step;
   all other steps run from the bundled data alone.

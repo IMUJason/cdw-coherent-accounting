@@ -10,27 +10,15 @@
     "n": 32
   },
   "map_cov": {
-    "mean": 0.4765625,
-    "mc_se": 0.06210497644954377,
+    "mean": 0.46875,
+    "mc_se": 0.06199391879645886,
     "n": 32
   },
   "full_cov": {
-    "mean": 0.921875,
-    "mc_se": 0.030094567013161648,
-    "n": 32
-  },
-  "emreg_cov": {
-    "mean": 0.0,
-    "mc_se": 0.0,
-    "n": 32
-  },
-  "emB1_cov": {
-    "mean": 0.0390625,
-    "mc_se": 0.027745819850082384,
+    "mean": 0.90625,
+    "mc_se": 0.03593859570559654,
     "n": 32
   },
   "em_iters_median": 200.0,
-  "emreg_iters_median": 43.0,
-  "emB1_iters_median": 67.5,
-  "divergences_total": 2
+  "divergences_total": 0
 }

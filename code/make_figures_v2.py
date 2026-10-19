@@ -110,10 +110,10 @@ def fig1():
     ax.text(28, 14.6, "same quantity, different calibers", ha="center",
             fontsize=6.2, style="italic", color=NPG["ink"])
     ax.text(28, 10.8, "2\u20137\u00D7 discrepancy in any given year", ha="center",
-            fontsize=6.8, fontweight="bold", color=NPG["red2"])
+            fontsize=5.8, fontweight="bold", color=NPG["red2"])
 
     box(66, 62, 50, 20, "#EDF3F8", ec=NPG["blue"], lw=0.9)
-    ax.text(91, 78.4, "anchor-referenced latent state  $\\theta_{c,t}$", ha="center", fontsize=7,
+    ax.text(91, 78.4, "anchor-referenced latent state", ha="center", fontsize=6.2,
             fontweight="bold", color=NPG["blue"])
     ax.text(91, 74.3, "mean-reverting growth  (Eq. 2)", ha="center", fontsize=6)
     ax.text(91, 70.6, "nation-level latent state", ha="center",
@@ -145,14 +145,15 @@ def fig1():
             fontweight="bold", color=NPG["ink"])
 
     box(124, 58, 57, 24, "#EDF3F8", ec=NPG["blue"], lw=0.9)
-    ax.text(152.5, 78.5, "anchor-referenced series + 90% interval", ha="center", fontsize=6.6,
-            fontweight="bold", color=NPG["blue"])
+    ax.text(152.5, 79.8, "anchor-referenced series\n+ 90% interval", ha="center",
+            va="center", fontsize=6.2, fontweight="bold", color=NPG["blue"],
+            linespacing=1.0)
     fy = np.linspace(128, 176, 30)
-    ax.plot(fy, 62 + 8 * np.tanh((fy - 150) / 14), color=NPG["blue"], lw=1.1)
-    ax.fill_between(fy, 60 + 8 * np.tanh((fy - 150) / 14),
-                    64.5 + 8 * np.tanh((fy - 150) / 14),
+    ax.plot(fy, 66 + 5 * np.tanh((fy - 150) / 14), color=NPG["blue"], lw=1.1)
+    ax.fill_between(fy, 64.2 + 5 * np.tanh((fy - 150) / 14),
+                    67.2 + 5 * np.tanh((fy - 150) / 14),
                     color=NPG["blue"], alpha=0.22, lw=0)
-    ax.scatter([132, 152, 170], [57.8, 66.0, 74.2], s=10, color=NPG["red"],
+    ax.scatter([132, 152, 170], [59.6, 66.0, 72.2], s=10, color=NPG["red"],
                marker="s", zorder=3)
 
     box(124, 33, 57, 19, "#FBF1EC", ec=NPG["red"], lw=0.9)
@@ -294,7 +295,7 @@ def fig3():
     ax.set_xlim(1999, 2027)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.24), frameon=False,
               fontsize=5.4, handletextpad=0.4, ncol=3)
-    ax.set_title("57 records (53 with mass), 19 sources", fontsize=7, pad=3,
+    ax.set_title("58 records (54 with mass), 19 sources", fontsize=7, pad=3,
                  loc="left")
     pan(ax, "a")
 
@@ -323,14 +324,15 @@ def fig3():
     natc = [len(nat[nat["src"] == f]) for f in fams]
     othc = [len(obs[obs["src"] == f]) - natc[k] for k, f in enumerate(fams)]
     y = np.arange(len(fams))[::-1]
-    ax.barh(y + 0.19, natc, height=0.36, color=NPG["blue"], label="national")
+    ax.barh(y + 0.19, natc, height=0.36, color=NPG["blue"],
+            label="national total generation")
     ax.barh(y - 0.19, othc, height=0.36, color=NPG["gold"],
-            label="sub-national")
+            label="other records")
     ax.set_yticks(y)
     ax.set_yticklabels(labs)
     ax.set_xlabel("Observations")
-    ax.legend(frameon=False, loc="lower right", fontsize=5.6)
-    ax.set_title("National vs. sub-national counts",
+    ax.legend(frameon=False, loc="lower right", fontsize=5.4)
+    ax.set_title("National total vs. other records",
                  fontsize=7, pad=3, loc="left")
     pan(ax, "c")
     save(fig, "fig3_database")
@@ -364,14 +366,14 @@ def fig4():
 
     ax = axes[1]
     ax.hist(m["lr"], bins=26, color=NPG["dusty"], alpha=0.85, density=True)
-    ax.axvline(m["lr"].median(), color=NPG["red"], ls="--", lw=1.0)
+    ax.axvline(m["lr"].median(), color=NPG["red"], ls="--", lw=1.0,
+               label=f"empirical median ({np.exp(m['lr'].median()):.2f}\u00D7)")
     r_model = -1.616 + (1.085 - 1.0) * float(np.median(np.log(tot["value"])))
-    ax.axvline(r_model, color=NPG["blue"], lw=1.2)
-    ax.set_ylim(0, 2.9)
-    ax.text(-4.45, 2.62, "empirical median (0.81\u00D7)", fontsize=5.6,
-            color=NPG["red"])
-    ax.text(-4.45, 2.36, "model, median level (0.65\u00D7)", fontsize=5.6,
-            color=NPG["blue"])
+    ax.axvline(r_model, color=NPG["blue"], lw=1.2,
+               label=f"model, median level ({np.exp(r_model):.2f}\u00D7)")
+    ax.set_ylim(0, 3.35)
+    ax.legend(frameon=True, facecolor="white", framealpha=0.92,
+              edgecolor="none", loc="upper left", fontsize=5.0)
     ax.set_xlabel("log( F / total caliber )")
     ax.set_ylabel("Density")
     pan(ax, "b", dy=1.04)
@@ -384,9 +386,10 @@ def fig4():
     lo = e2["lo"].to_numpy()
     med = e2["pred_Mt"].to_numpy()
     ax.errorbar(x, med, yerr=[med - lo, hi - med], fmt="o", ms=3.4,
-                color=NPG["blue"], capsize=2.4, lw=0.9, label="posterior (90% PI)")
+                color=NPG["blue"], capsize=2.4, lw=0.9,
+                label="posterior (90% interval)")
     ax.scatter(x, e2["truth_Mt"], marker="s", s=16, color=NPG["red"], zorder=3,
-               label="truth")
+               label="official value")
     ax.scatter(x, e2["truth_Mt"] * (1 + e2["persistence_err_pct"] / 100),
                marker="^", s=16, color=NPG["grey"], zorder=3,
                label="persistence")
@@ -395,7 +398,8 @@ def fig4():
     ax.set_ylabel("Generation (Mt)")
     ax.set_yscale("log")
     ax.set_ylim(0.3, 700)
-    ax.legend(frameon=False, loc="center right", fontsize=5.4)
+    ax.legend(frameon=True, facecolor="white", framealpha=0.9, edgecolor="none",
+              loc="upper left", fontsize=5.2)
     pan(ax, "c", dy=1.04)
 
     ax = axes[3]
@@ -429,9 +433,9 @@ def fig5():
     Y = 1e5
     ax.fill_between(post["year"], post["lo90_wt"] / Y, post["hi90_wt"] / Y,
                     color=NPG["blue"], alpha=0.20, lw=0,
-                    label="coherent estimate (90% PI)")
+                    label="anchor-referenced, 90% interval")
     ax.plot(post["year"], post["median_wt"] / Y, color=NPG["blue"], lw=1.4,
-            label="coherent estimate (median)")
+            label="anchor-referenced, median")
     ax.fill_between(fc["year"], fc["lo90_wt"] / Y, fc["hi90_wt"] / Y,
                     color=NPG["cyan"], alpha=0.18, lw=0)
     ax.plot(fc["year"], fc["median_wt"] / Y, color=NPG["cyan"], lw=1.3,
@@ -444,7 +448,8 @@ def fig5():
     ax.set_xlabel("Year")
     ax.set_xlim(1999, 2031)
     ax.set_ylim(0, 5.2)
-    ax.legend(loc="lower right", frameon=False, ncol=2, fontsize=6,
+    ax.legend(loc="upper left", frameon=True, facecolor="white",
+              framealpha=0.92, edgecolor="none", ncol=2, fontsize=5.4,
               handletextpad=0.4)
     fig.tight_layout()
     save(fig, "fig5_china")
@@ -469,8 +474,10 @@ def fig6():
     ax.set_xscale("log")
     ax.set_xticks([0.6, 1.0, 1.5, 2.0, 3.0])
     ax.set_xticklabels(["0.6", "1", "1.5", "2", "3"])
+    ax.minorticks_off()
+    ax.xaxis.get_offset_text().set_visible(False)
     ax.set_xlim(0.45, 4.8)
-    ax.set_xlabel("Level ratio vs. anchor caliber (90% CI)")
+    ax.set_xlabel("Level ratio vs. anchor caliber (90% interval)")
     fig.tight_layout()
     save(fig, "fig6_bias")
 
