@@ -55,7 +55,7 @@ def country_draws(smp, df_tr, C, T, rng):
         sd_t = float(sd_theta[s])
         q = 1.0 / sd_t**2
         P = np.zeros((T, T))
-        P[0, 0] = q + 1.0 / 0.75**2
+        P[0, 0] = q + 1.0 / 0.5**2   # SD0=0.5: initial-state sd (0.75 is the mu0 prior sd)
         P[0, 1] = -q
         for t in range(1, T - 1):
             P[t, t] = 2 * q

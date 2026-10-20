@@ -93,10 +93,19 @@ def build_model(df_exact: pd.DataFrame, df_cens: pd.DataFrame, T: int):
         numpyro.sample("y_exact", dist.MultivariateNormal(mean_y, covariance_matrix=cov_y),
                        obs=y_arr)
 
-        m_c = coef[cm] * pm[ct] + b[cm]
-        v_c = (coef[cm] ** 2) * jnp.diag(cov_theta)[ct] + sd_m[cm] ** 2
-        log_prob_above = log_ndtr((m_c - jnp.asarray(cbound)) / jnp.sqrt(v_c))
-        numpyro.factor("censored_bounds", jnp.sum(log_prob_above))
+        # Censoring conditions on the exact data: with (y_exact, y_c) jointly
+        # Gaussian given phi, P(y_c >= bound | y_exact, phi) is a univariate
+        # Gaussian tail with the exact-data conditional mean and variance.
+        m_c0 = coef[cm] * pm[ct] + b[cm]
+        H_c = jnp.zeros((ncens, T)).at[jnp.arange(ncens), ct].set(coef[cm])
+        cross = H_c @ cov_theta @ H.T
+        resid = y_arr - mean_y
+        solve_ee = jnp.linalg.solve(cov_y, cross.T)
+        m_cond = m_c0 + jnp.diag(cross @ solve_ee)
+        v_c0 = (coef[cm] ** 2) * jnp.diag(cov_theta)[ct] + sd_m[cm] ** 2
+        v_cond = v_c0 - jnp.diag(cross @ solve_ee)
+        numpyro.factor("censored_bounds",
+                       jnp.sum(log_ndtr((m_cond - jnp.asarray(cbound)) / jnp.sqrt(v_cond))))
 
     return model
 

@@ -110,7 +110,7 @@ def main() -> int:
     c23 = cens[(cens["scope"] == "posterior") & (cens["year"] == 2023)].iloc[0]
     c30 = cens[(cens["scope"] == "forecast") & (cens["year"] == 2030)].iloc[0]
     record("censored_close_to_production",
-           abs(c23["median"] - 2.36) < 0.02 and abs(c30["median"] - 2.92) < 0.05,
+           abs(c23["median"] - 2.365) < 0.02 and abs(c30["median"] - 2.772) < 0.05,
            f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
 
     dyn = pd.read_csv(RES / "review_r7" / "dynprior" / "dynprior_summary.csv")
