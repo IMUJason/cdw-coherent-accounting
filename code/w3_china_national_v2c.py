@@ -102,7 +102,8 @@ def theta_posterior(phi, df, T):
 
 
 def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6,
-               logB_scale=0.25, offset_scale=0.4):
+               logB_scale=0.25, offset_scale=0.4, kappa_sd=0.03,
+               sd_eta_scale=0.12):
     m_arr = df["m"].to_numpy().astype(int)
     t_arr = df["t"].to_numpy().astype(int)
     y_arr = df["y"].to_numpy()
@@ -111,10 +112,10 @@ def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6,
 
     def model():
         mu0 = numpyro.sample("mu0", dist.Normal(jnp.log(26279.0), mu0_scale))
-        c = numpyro.sample("c", dist.Normal(0.02, 0.03))
+        c = numpyro.sample("c", dist.Normal(0.02, kappa_sd))
         rho_raw = numpyro.sample("rho_raw", dist.Normal(0.0, 1.0))
         rho = jax.nn.sigmoid(rho_raw) * 0.7 + 0.28   # in (0.28, 0.98)
-        sd_eta = numpyro.sample("sd_eta", dist.HalfNormal(0.12))
+        sd_eta = numpyro.sample("sd_eta", dist.HalfNormal(sd_eta_scale))
         if unit_slopes:
             logB_f = numpyro.deterministic("logB_f", jnp.zeros(M - 1))
         else:

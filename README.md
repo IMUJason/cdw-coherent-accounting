@@ -39,6 +39,9 @@ code/                            analysis code (run order = pipeline order)
   sbc_production.py              matched SBC on the production China design (main 32 / misspec 16)
   review_r5_validation.py        two-chain convergence diagnostic for the production China run
   review_r7_prior_sensitivity.py China measurement-prior sensitivity (half/base/double SD arms)
+  review_r7_censored.py          censored-likelihood refit for the two lower-bound observations
+  review_r7_loso.py              leave-one-source-out influence diagnostic
+  review_r7_dynprior.py          dynamic-prior sensitivity (kappa sd, sigma_eta scale)
   eu_prior_sensitivity.py        EU log-slope prior-location sensitivity (two arms, full panel)
   decision_value_annual.py       annual-loss capacity decision and sensitivity grid
   external_consistency.py        deterministic 2024-anchor holdout + same-source consistency check
@@ -111,6 +114,11 @@ python code/sbc_production.py misspec 16
 # China measurement-prior sensitivity (three two-chain arms, ~1 min each)
 python code/review_r7_prior_sensitivity.py
 
+# Censored-likelihood refit, leave-one-source-out, dynamic-prior sensitivity (~2 min total)
+python code/review_r7_censored.py
+python code/review_r7_loso.py
+python code/review_r7_dynprior.py
+
 # Deterministic 2024-anchor holdout and same-source consistency check
 python code/external_consistency.py
 
@@ -150,6 +158,9 @@ python code/verify_release.py
 | `results/review_r7/sbc_main*.csv/.json/.npz/.log` | `sbc_production.py main 32` |
 | `results/review_r7/sbc_misspec*.csv/.json/.npz/.log` | `sbc_production.py misspec 16` |
 | `results/review_r7/prior/*` (CSV/JSON summaries) | `review_r7_prior_sensitivity.py` |
+| `results/review_r7/censored/*` | `review_r7_censored.py` |
+| `results/review_r7/loso/*` | `review_r7_loso.py` |
+| `results/review_r7/dynprior/*` | `review_r7_dynprior.py` |
 | `results/review_r7/eu_prior/*` (CSV/JSON summaries) | `eu_prior_sensitivity.py` |
 | `results/review_r7/eu_numeric_audit_r7.json/.csv` | audit of the released EU files (provenance-distinct recomputation) |
 | `results/external_consistency_r7.csv/.json/.npz` | `external_consistency.py` |

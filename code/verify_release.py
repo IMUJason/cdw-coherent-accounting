@@ -95,6 +95,32 @@ def main() -> int:
     record("eu_prior_two_arms", len(eu_ratio) == 2 and abs(loc0_r / base_r - 1) < 0.01,
            f"baseline={base_r:.4f}, loc0={loc0_r:.4f}")
 
+    loso = pd.read_csv(RES / "review_r7" / "loso" / "loso_summary.csv")
+    single = loso[loso["dropped_obs"] == 1]
+    anchor_row = loso[loso["dropped"] == "meescc"].iloc[0]
+    record("loso_single_point_stable",
+           len(loso) == 7 and (single["y2023_median"] - 2.36).abs().max() < 0.02,
+           f"rows={len(loso)}, single-drop 2023 range="
+           f"[{single['y2023_median'].min():.3f},{single['y2023_median'].max():.3f}]")
+    record("loso_anchor_identifies",
+           anchor_row["y2023_hi"] - anchor_row["y2023_lo"] > 8.0,
+           f"drop-anchor 2023 interval=[{anchor_row['y2023_lo']:.2f},{anchor_row['y2023_hi']:.2f}]")
+
+    cens = pd.read_csv(RES / "review_r7" / "censored" / "censored_summary.csv")
+    c23 = cens[(cens["scope"] == "posterior") & (cens["year"] == 2023)].iloc[0]
+    c30 = cens[(cens["scope"] == "forecast") & (cens["year"] == 2030)].iloc[0]
+    record("censored_close_to_production",
+           abs(c23["median"] - 2.36) < 0.02 and abs(c30["median"] - 2.92) < 0.05,
+           f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
+
+    dyn = pd.read_csv(RES / "review_r7" / "dynprior" / "dynprior_summary.csv")
+    base30 = dyn[dyn["arm"] == "base"].iloc[0]["y2030_median"]
+    sig30 = dyn[dyn["arm"] == "sigma_wide"].iloc[0]["y2030_median"]
+    kap30 = dyn[dyn["arm"] == "kappa_wide"].iloc[0]["y2030_median"]
+    record("dynprior_expected",
+           len(dyn) == 3 and abs(sig30 - base30) / base30 < 0.01 and kap30 > base30,
+           f"base={base30:.2f}, sigma_wide={sig30:.2f}, kappa_wide={kap30:.2f}")
+
     post = pd.read_csv(RES / "china_national_posterior_v2c.csv")
     g2023 = float(post[post["year"] == 2023]["median_wt"].iloc[0]) / 1e5
     record("unit_conversion_2023", abs(g2023 - 2.36) < 0.01,

@@ -91,6 +91,26 @@
       "detail": "baseline=0.6624, loc0=0.6637"
     },
     {
+      "check": "loso_single_point_stable",
+      "pass": true,
+      "detail": "rows=7, single-drop 2023 range=[2.355,2.370]"
+    },
+    {
+      "check": "loso_anchor_identifies",
+      "pass": true,
+      "detail": "drop-anchor 2023 interval=[0.62,9.34]"
+    },
+    {
+      "check": "censored_close_to_production",
+      "pass": true,
+      "detail": "2023=2.352, 2030=2.922"
+    },
+    {
+      "check": "dynprior_expected",
+      "pass": true,
+      "detail": "base=2.79, sigma_wide=2.80, kappa_wide=3.17"
+    },
+    {
       "check": "unit_conversion_2023",
       "pass": true,
       "detail": "2023 median=2.3598 Gt (raw wt=235977)"
@@ -101,6 +121,6 @@
       "detail": "leaks=none"
     }
   ],
-  "passed": 20,
+  "passed": 24,
   "failed": 0
 }
