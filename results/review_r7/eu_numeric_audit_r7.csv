@@ -1,0 +1,11 @@
+window,method,n,coverage,mean_interval_score_Mt,median_width_over_truth,MdAPE_pct
+W1,latent_model_600x600,26,0.92307692,29.19573633,2.45522783,
+W1,observation_model_600x600,26,0.92307692,30.00512414,2.49250137,
+W1,AR_residual_bootstrap_2000,26,0.61538462,11.94550350,0.73151854,19.76608830
+W1,model_point_800x800_separate_artifact,26,,,,15.64459600
+W1,persistence_point_800x800_separate_artifact,26,,,,14.67920248
+W2,latent_model_600x600,27,1.00000000,27.00485828,2.29177702,
+W2,observation_model_600x600,27,1.00000000,27.47532406,2.34488199,
+W2,AR_residual_bootstrap_2000,27,0.74074074,16.33392572,0.87525353,15.38896733
+W2,model_point_800x800_separate_artifact,27,,,,10.09100200
+W2,persistence_point_800x800_separate_artifact,27,,,,14.24187625

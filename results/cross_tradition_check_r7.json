@@ -1,0 +1,20 @@
+{
+  "investni2022": {
+    "value_Gt": 2.75,
+    "year": 2022,
+    "posterior_percentile": 0.9853333333333333,
+    "posterior_median_Gt": 2.3321320515117443,
+    "ratio_to_median": 1.1791785110184407,
+    "included_in_fit": false,
+    "role": "excluded secondary contextual estimate",
+    "source_lineage": "upstream NBS attribution not independently verified; shared inputs with fitted academic estimates cannot be excluded",
+    "interpretation": "above the 90% latent interval; discrepancy does not identify reporting scope or independence"
+  },
+  "an2024century": {
+    "cumulative_Gt_2000_2100": 224.08,
+    "included_in_fit": false,
+    "role": "MFA literature context only",
+    "comparison_status": "not scored",
+    "reason": "century cumulative building-sector estimate and 2020-2024 anchor-referenced annual states have different periods and estimands; matching annual MFA values are unavailable"
+  }
+}

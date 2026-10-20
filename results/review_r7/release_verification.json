@@ -1,0 +1,106 @@
+{
+  "checks": [
+    {
+      "check": "china_obs_records",
+      "pass": true,
+      "detail": "records=58 (expect 58)"
+    },
+    {
+      "check": "china_obs_sources",
+      "pass": true,
+      "detail": "sources=19 (expect 19)"
+    },
+    {
+      "check": "china_obs_numeric",
+      "pass": true,
+      "detail": "numeric=54 (expect 54)"
+    },
+    {
+      "check": "china_fit_set",
+      "pass": true,
+      "detail": "fit obs=30, processes=7 (expect 30/7)"
+    },
+    {
+      "check": "sbc_replicates",
+      "pass": true,
+      "detail": "rows=32"
+    },
+    {
+      "check": "sbc_oracle_coverage",
+      "pass": true,
+      "detail": "recomputed=0.902344 released=0.902344"
+    },
+    {
+      "check": "sbc_em_coverage",
+      "pass": true,
+      "detail": "recomputed=0.167969 released=0.167969"
+    },
+    {
+      "check": "sbc_emreg_coverage",
+      "pass": true,
+      "detail": "recomputed=0.007812 released=0.007812"
+    },
+    {
+      "check": "sbc_map_coverage",
+      "pass": true,
+      "detail": "recomputed=0.457031 released=0.457031"
+    },
+    {
+      "check": "sbc_full_coverage",
+      "pass": true,
+      "detail": "recomputed=0.914062 released=0.914062"
+    },
+    {
+      "check": "decision_c_star",
+      "pass": true,
+      "detail": "recomputed=2.7007 released=2.7007"
+    },
+    {
+      "check": "decision_c_point",
+      "pass": true,
+      "detail": "recomputed=2.5669 released=2.5669"
+    },
+    {
+      "check": "decision_grid",
+      "pass": true,
+      "detail": "p=[30.0, 37.0, 70.0, 95.0, 120.0, 140.0, 200.0], h=[2.5, 25.0, 45.0]"
+    },
+    {
+      "check": "holdout_latent_covers",
+      "pass": true,
+      "detail": "median=2.4971, interval=[2.159,2.878]"
+    },
+    {
+      "check": "holdout_report_wider",
+      "pass": true,
+      "detail": "report interval=[2.095,2.974]"
+    },
+    {
+      "check": "prior_theta_ref",
+      "pass": true,
+      "detail": "theta_ref=11.6402"
+    },
+    {
+      "check": "prior_zheng_ratio",
+      "pass": true,
+      "detail": "zheng base median=2.8084"
+    },
+    {
+      "check": "eu_prior_two_arms",
+      "pass": true,
+      "detail": "baseline=0.6624, loc0=0.6637"
+    },
+    {
+      "check": "unit_conversion_2023",
+      "pass": true,
+      "detail": "2023 median=2.3598 Gt (raw wt=235977)"
+    },
+    {
+      "check": "no_private_paths",
+      "pass": true,
+      "detail": "leaks=none"
+    }
+  ],
+  "passed": 20,
+  "failed": 0
+}

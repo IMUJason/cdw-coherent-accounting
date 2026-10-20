@@ -1,0 +1,4 @@
+test,target,seed,state_seed,observation_seed,withheld_obs,truth_Gt,median_Gt,lo90_Gt,hi90_Gt,covered
+A_holdout_2024_latent,anchor-referenced latent state,51.0,51001.0,,1,2.31,2.4970510093873335,2.158570714526433,2.8782561522777,True
+A_holdout_2024_observation,future anchor report,51.0,51001.0,51002.0,1,2.31,2.500006038171191,2.0951014664544605,2.9741828809542663,True
+B_Gao2023_same_source,published forecast consistency,,,,0,2.39,2.359770632857099,,,

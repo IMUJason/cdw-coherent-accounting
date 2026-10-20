@@ -1,0 +1,45 @@
+{
+  "generator": "production priors including random anchor noise; exact AR prior",
+  "test_states_per_replicate": 8,
+  "replicates": 32,
+  "warmup_per_chain": 600,
+  "retained_per_chain": 800,
+  "chains": 2,
+  "divergences": 1,
+  "max_rhat": 1.0061358796069901,
+  "min_ess": 677.7941923151502,
+  "seconds": 445.68700000003446,
+  "oracle": {
+    "coverage": 0.90234375,
+    "mc_se": 0.01658765872951985,
+    "rank_mean": 0.4953369140625,
+    "rank_mc_se": 0.02416689512132802
+  },
+  "em": {
+    "coverage": 0.16796875,
+    "mc_se": 0.04369573787934659,
+    "rank_mean": 0.429501953125,
+    "rank_mc_se": 0.07516568509253069
+  },
+  "emreg": {
+    "coverage": 0.0078125,
+    "mc_se": 0.005434440184689472,
+    "rank_mean": 0.4041943359375,
+    "rank_mc_se": 0.08754637249259156
+  },
+  "map": {
+    "coverage": 0.45703125,
+    "mc_se": 0.05795179247233038,
+    "rank_mean": 0.4851708984375,
+    "rank_mc_se": 0.06378510556947882
+  },
+  "full": {
+    "coverage": 0.9140625,
+    "mc_se": 0.028858873010069022,
+    "rank_mean": 0.48495605468749997,
+    "rank_mc_se": 0.043904426255687495
+  },
+  "em_converged": 2,
+  "emreg_converged": 0,
+  "map_successes": 32
+}

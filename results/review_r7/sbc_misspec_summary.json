@@ -1,0 +1,21 @@
+{
+  "generator": "production priors including random anchor noise; exact AR prior",
+  "test_states_per_replicate": 8,
+  "replicates": 16,
+  "warmup_per_chain": 600,
+  "retained_per_chain": 800,
+  "chains": 2,
+  "divergences": 0,
+  "max_rhat": 1.002811525635009,
+  "min_ess": 416.1683338391659,
+  "seconds": 216.35900000005495,
+  "full": {
+    "coverage": 0.8828125,
+    "mc_se": 0.05162559271249742,
+    "rank_mean": 0.488671875,
+    "rank_mc_se": 0.0628064087402006
+  },
+  "em_converged": null,
+  "emreg_converged": null,
+  "map_successes": null
+}

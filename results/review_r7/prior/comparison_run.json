@@ -1,0 +1,208 @@
+{
+  "task": "bounded China measurement-prior sensitivity",
+  "arms": [
+    {
+      "arm": "base",
+      "prior_parameters": {
+        "logB_scale": 0.25,
+        "offset_scale": 0.4,
+        "mu0_scale_unchanged": 0.6,
+        "other_model_settings_unchanged": true
+      },
+      "sampler": {
+        "chains": 2,
+        "chain_method": "sequential",
+        "warmup_per_chain": 800,
+        "retained_per_chain": 1000,
+        "target_accept": 0.95,
+        "seed": 20261020,
+        "float64_enabled": true
+      },
+      "derived_random_seeds": {
+        "conditional_state_draws": 20271020,
+        "forecast_paths": 20281020
+      },
+      "reference": {
+        "theta_ref": 11.640199566081748,
+        "theta_ref_definition": "float64 mean of every value in production results/china_theta_draws_v2c.npy",
+        "theta_ref_file": "results/china_theta_draws_v2c.npy",
+        "ratio_formula": "exp((exp(logB)-1)*theta_ref+b)"
+      },
+      "observations": 30,
+      "forecast_paths_per_posterior_draw": 20,
+      "forecast_path_count": 40000,
+      "divergences_total": 0,
+      "divergences_by_chain": [
+        0,
+        0
+      ],
+      "max_r_hat": 1.0006188828628835,
+      "min_ess": 1575.778415693146,
+      "runtime_seconds": 21.40700000000652,
+      "key_years_Gt": {
+        "2023": [
+          2.3619640804694972,
+          2.1795705221721473,
+          2.5293442733725744
+        ],
+        "2024": [
+          2.356333401254336,
+          2.201911810304579,
+          2.560343016457574
+        ],
+        "2030": [
+          2.7867525228947336,
+          1.4465179990556771,
+          4.900071274698783
+        ]
+      },
+      "jax_version": "0.6.2",
+      "numpyro_version": "0.19.0",
+      "numpy_version": "2.2.6",
+      "theta_draws_file_shape": [
+        25,
+        2000
+      ],
+      "forecast_draws_file_shape": [
+        6,
+        40000
+      ]
+    },
+    {
+      "arm": "tight",
+      "prior_parameters": {
+        "logB_scale": 0.125,
+        "offset_scale": 0.2,
+        "mu0_scale_unchanged": 0.6,
+        "other_model_settings_unchanged": true
+      },
+      "sampler": {
+        "chains": 2,
+        "chain_method": "sequential",
+        "warmup_per_chain": 800,
+        "retained_per_chain": 1000,
+        "target_accept": 0.95,
+        "seed": 20261021,
+        "float64_enabled": true
+      },
+      "derived_random_seeds": {
+        "conditional_state_draws": 20271021,
+        "forecast_paths": 20281021
+      },
+      "reference": {
+        "theta_ref": 11.640199566081748,
+        "theta_ref_definition": "float64 mean of every value in production results/china_theta_draws_v2c.npy",
+        "theta_ref_file": "results/china_theta_draws_v2c.npy",
+        "ratio_formula": "exp((exp(logB)-1)*theta_ref+b)"
+      },
+      "observations": 30,
+      "forecast_paths_per_posterior_draw": 20,
+      "forecast_path_count": 40000,
+      "divergences_total": 0,
+      "divergences_by_chain": [
+        0,
+        0
+      ],
+      "max_r_hat": 1.0018762403692731,
+      "min_ess": 1778.9972199769581,
+      "runtime_seconds": 11.65700000000652,
+      "key_years_Gt": {
+        "2023": [
+          2.3622983377325504,
+          2.185873711618336,
+          2.52765616789589
+        ],
+        "2024": [
+          2.358415153259111,
+          2.191550074502438,
+          2.5532921738248264
+        ],
+        "2030": [
+          2.7909689129842423,
+          1.4916081025659553,
+          4.896314976345831
+        ]
+      },
+      "jax_version": "0.6.2",
+      "numpyro_version": "0.19.0",
+      "numpy_version": "2.2.6",
+      "theta_draws_file_shape": [
+        25,
+        2000
+      ],
+      "forecast_draws_file_shape": [
+        6,
+        40000
+      ]
+    },
+    {
+      "arm": "wide",
+      "prior_parameters": {
+        "logB_scale": 0.5,
+        "offset_scale": 0.8,
+        "mu0_scale_unchanged": 0.6,
+        "other_model_settings_unchanged": true
+      },
+      "sampler": {
+        "chains": 2,
+        "chain_method": "sequential",
+        "warmup_per_chain": 800,
+        "retained_per_chain": 1000,
+        "target_accept": 0.95,
+        "seed": 20261022,
+        "float64_enabled": true
+      },
+      "derived_random_seeds": {
+        "conditional_state_draws": 20271022,
+        "forecast_paths": 20281022
+      },
+      "reference": {
+        "theta_ref": 11.640199566081748,
+        "theta_ref_definition": "float64 mean of every value in production results/china_theta_draws_v2c.npy",
+        "theta_ref_file": "results/china_theta_draws_v2c.npy",
+        "ratio_formula": "exp((exp(logB)-1)*theta_ref+b)"
+      },
+      "observations": 30,
+      "forecast_paths_per_posterior_draw": 20,
+      "forecast_path_count": 40000,
+      "divergences_total": 0,
+      "divergences_by_chain": [
+        0,
+        0
+      ],
+      "max_r_hat": 1.0012416739543215,
+      "min_ess": 1863.5976636603789,
+      "runtime_seconds": 28.51500000001397,
+      "key_years_Gt": {
+        "2023": [
+          2.36175871823388,
+          2.1778351848609847,
+          2.5395435018042405
+        ],
+        "2024": [
+          2.357156558973356,
+          2.1912283733656133,
+          2.5574066308321948
+        ],
+        "2030": [
+          2.8015879725506343,
+          1.481944971501215,
+          4.881222831778736
+        ]
+      },
+      "jax_version": "0.6.2",
+      "numpyro_version": "0.19.0",
+      "numpy_version": "2.2.6",
+      "theta_draws_file_shape": [
+        25,
+        2000
+      ],
+      "forecast_draws_file_shape": [
+        6,
+        40000
+      ]
+    }
+  ],
+  "prior_wide_distinction": "The earlier review_r5 prior_wide arm changed only mu0_scale from 0.6 to 1.8; it left the measurement priors at logB_scale=0.25 and offset_scale=0.4. It was not a measurement-prior sensitivity arm.",
+  "interpretation_limit": "A wide-prior arm estimates a posterior under that specified wide prior; it does not by itself prove source ratios are insensitive to prior choice."
+}

@@ -1,314 +1,298 @@
-"""R5-04/R5-06: matched SBC on the PRODUCTION China model.
+"""Matched production-prior SBC with audited plug-in comparators.
 
-All arms share the same simulated dataset per replicate.
-  generator : phi ~ production priors (v2c), theta ~ AR(1)-increment DLM prior,
-              y at the ACTUAL (m, t) cells of the production database.
-  arms (main):
-    oracle : exact conditional theta | phi_true
-    em     : EM point estimates of measurement params (weak ridge 1e-3 for the
-             n=1 sources), dynamics at TRUE values, then exact conditional
-    map    : joint MAP of all hyperparameters (L-BFGS, 2 starts)
-    full   : collapsed fully Bayesian NUTS (production make_model, y replaced,
-             400+400)
-  misspec : Gao errors generated AR(1) rho=0.7 (marginal sd 0.07), fitted with
-            the standard independent-error model (full arm only).
-  metrics : 8 uniformly sampled test states per replicate; per-replicate 90%
-            coverage and mean rank; MC SE uses the replicate as unit (R5-05).
-
-Usage: python sbc_production.py main 32 | misspec 16
+All arms use the same generated data and eight test years per replicate.
+EM arms know the true dynamic hyperparameters, estimate positive linear slopes,
+offsets and free noise scales, and use explicitly stated linear-scale ridges.
+The joint MAP is a mode in NumPyro's unconstrained sampling coordinates.
+Results are isolated from legacy runs under results/review_r7/.
 """
+import argparse
+import hashlib
 import json
+from pathlib import Path
 import sys
 import time
-from pathlib import Path
 
 import jax
+jax.config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 import numpy as np
 import numpyro.distributions as dist
-import pandas as pd
+from numpyro.diagnostics import summary as chain_summary
 from numpyro.infer import MCMC, NUTS
+import pandas as pd
 from scipy.optimize import minimize
+from scipy.special import expit
 
-jax.config.update("jax_enable_x64", True)
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import w3_china_national_v2c as v2c  # noqa: E402
+import w3_china_national_v2c as v2c
 
-RES = ROOT / "results" / "review_r5"
-T = v2c.T
-M = len(v2c.FIT_SOURCES)
-SD0 = 0.6
-N_CONDMIN = 400
+RES = ROOT / "results" / "review_r7"
+T, M, SD0 = v2c.T, len(v2c.FIT_SOURCES), v2c.SD0
+N_CONDMIN = 800
 OBS_DF = v2c.load_obs()
-M_ARR = OBS_DF["m"].to_numpy().astype(int)
-T_ARR = OBS_DF["t"].to_numpy().astype(int)
+M_ARR = OBS_DF["m"].to_numpy(dtype=int)
+T_ARR = OBS_DF["t"].to_numpy(dtype=int)
 
 
-def sigmoid(x):
-    return 1.0 / (1.0 + np.exp(-x))
+def expand_noise(free):
+    free = np.asarray(free)
+    out = np.concatenate([free[..., :1], np.full(free.shape[:-1] + (1,), np.log(.07)),
+                          free[..., 1:]], axis=-1)
+    assert out.shape[-1] == M
+    return out
 
 
 def draw_phi(rng):
-    return dict(
-        mu0=rng.normal(np.log(26279.0), SD0),
-        c=rng.normal(0.02, 0.03),
-        rho=0.28 + 0.7 * sigmoid(rng.normal(0.0, 1.0)),
-        sd_eta=abs(rng.normal(0.0, 0.12)),
-        logB=np.concatenate([[0.0], rng.normal(0.0, 0.25, M - 1)]),
-        b=np.concatenate([[0.0], rng.normal(0.0, 0.4, M - 1)]),
-        log_sd_m=np.concatenate([[np.log(0.05)], [np.log(0.07)],
-                                 rng.normal(np.log(0.15), 0.4, M - 2)]),
-    )
+    noise_free = rng.normal(np.log(np.r_[.05, np.repeat(.15, M - 2)]), .4)
+    return dict(mu0=rng.normal(np.log(26279.), .6), c=rng.normal(.02, .03),
+                rho=.28 + .7 * expit(rng.normal()), sd_eta=abs(rng.normal(0, .12)),
+                logB=np.r_[0., rng.normal(0, .25, M - 1)],
+                b=np.r_[0., rng.normal(0, .4, M - 1)],
+                log_sd_m=expand_noise(noise_free))
 
 
 def sim_theta(phi, rng):
-    theta = np.empty(T)
-    theta[0] = rng.normal(phi["mu0"], SD0)
-    # stationary AR(1) initial increment, matching theta_prior
-    g = rng.normal(phi["c"], phi["sd_eta"] / np.sqrt(1.0 - phi["rho"] ** 2))
-    theta[1] = theta[0] + g
-    for t in range(2, T):
-        g = phi["c"] + phi["rho"] * (g - phi["c"]) + rng.normal(0, phi["sd_eta"])
-        theta[t] = theta[t - 1] + g
-    return theta
+    pm, P = v2c.theta_prior(phi["mu0"], phi["c"], phi["rho"], phi["sd_eta"], T)
+    return rng.multivariate_normal(pm, np.linalg.inv(P))
 
 
-def sim_y(phi, theta, rng, gao_rho=0.0):
-    B = np.exp(phi["logB"])
+def sim_y(phi, theta, rng, gao_rho=0.):
     sd = np.exp(phi["log_sd_m"])
-    eps = rng.normal(0.0, sd[M_ARR])
-    if gao_rho > 0:
-        idx = np.where(M_ARR == 1)[0]
-        order = np.argsort(T_ARR[idx])
-        s_innov = sd[1] * np.sqrt(1.0 - gao_rho**2)
-        e = np.empty(len(idx))
-        e[order[0]] = rng.normal(0, sd[1])
-        for k in range(1, len(order)):
-            e[order[k]] = gao_rho * e[order[k - 1]] + rng.normal(0, s_innov)
-        eps[idx[order]] = e
-    return B[M_ARR] * theta[T_ARR] + phi["b"][M_ARR] + eps
+    eps = rng.normal(0., sd[M_ARR])
+    idx = np.flatnonzero(M_ARR == 1)
+    idx = idx[np.argsort(T_ARR[idx])]
+    if gao_rho and len(idx):
+        e = rng.normal(0, sd[1])
+        eps[idx[0]] = e
+        for a, b in zip(idx[:-1], idx[1:]):
+            decay = gao_rho ** int(T_ARR[b] - T_ARR[a])
+            e = decay * e + rng.normal(0, sd[1] * np.sqrt(1 - decay**2))
+            eps[b] = e
+    return np.exp(phi["logB"])[M_ARR] * theta[T_ARR] + phi["b"][M_ARR] + eps
 
 
-def cond_theta(pm, P, y, B, b, sd_m):
-    Pp = P.copy()
-    r = P @ pm
-    for i in range(len(y)):
-        k = T_ARR[i]
-        w = B[M_ARR[i]] / sd_m[M_ARR[i]] ** 2
-        Pp[k, k] += B[M_ARR[i]] * w
-        r[k] += (y[i] - b[M_ARR[i]]) * w
-    cov = np.linalg.inv(Pp)
-    return cov @ r, cov
+def cond_theta(pm, P, y, B, b, sd):
+    H = np.zeros((len(y), T))
+    H[np.arange(len(y)), T_ARR] = B[M_ARR]
+    w = 1 / sd[M_ARR]**2
+    precision = P + H.T @ (w[:, None] * H)
+    cov = np.linalg.inv(precision)
+    return cov @ (P @ pm + H.T @ (w * (y - b[M_ARR]))), (cov + cov.T) / 2
 
 
 def sample_cond(m, cv, rng):
-    return np.stack([rng.multivariate_normal(m, cv) for _ in range(N_CONDMIN)], 1)
+    return rng.multivariate_normal(m, cv, size=N_CONDMIN).T
 
 
 def arm_oracle(phi, y, rng):
     pm, P = v2c.theta_prior(phi["mu0"], phi["c"], phi["rho"], phi["sd_eta"], T)
-    m, cv = cond_theta(pm, P, y, np.exp(phi["logB"]), phi["b"],
-                       np.exp(phi["log_sd_m"]))
-    return sample_cond(m, cv, rng), None
+    return sample_cond(*cond_theta(pm, P, y, np.exp(phi["logB"]), phi["b"],
+                                   np.exp(phi["log_sd_m"])), rng)
 
 
-def arm_em(phi_true, y, rng, max_iter=200, tol=1e-7):
-    logB = np.zeros(M)
-    b = np.zeros(M)
-    log_sd = np.concatenate([[np.log(0.05)], [np.log(0.07)],
-                             np.repeat(np.log(0.15), M - 2)])
-    pm, P = v2c.theta_prior(phi_true["mu0"], phi_true["c"],
-                            phi_true["rho"], phi_true["sd_eta"], T)
-    it, delta = 0, np.inf
-    while it < max_iter and delta > tol:
-        m, cv = cond_theta(pm, P, y, np.exp(logB), b, np.exp(log_sd))
-        newB, newb, newsd = logB.copy(), b.copy(), log_sd.copy()
+def arm_em(phi, y, rng, ridge=False, max_iter=1000, tol=1e-6):
+    B, b = np.ones(M), np.zeros(M)
+    sd = np.r_[.05, .07, np.repeat(.15, M - 2)]
+    pm, P = v2c.theta_prior(phi["mu0"], phi["c"], phi["rho"], phi["sd_eta"], T)
+    # Ridge penalties apply to B around one and b around zero, on their linear scales.
+    rbias = (16., 6.25) if ridge else (1e-3, 1e-3)
+    noise_floor_hits = 0
+    for it in range(1, max_iter + 1):
+        m, cv = cond_theta(pm, P, y, B, b, sd)
+        newB, newb, newsd = B.copy(), b.copy(), sd.copy()
         for mi in range(1, M):
-            sel = np.where(M_ARR == mi)[0]
-            if len(sel) == 0:
-                continue
-            k = T_ARR[sel]
-            Eth = m[k]
-            Eth2 = Eth**2 + cv[k, k]
-            yy = y[sel]
-            rB, rb = 1e-3, 1e-3          # weak ridge; n=1 sources stay near 0
-            A = np.array([[Eth2.sum() + rB, Eth.sum()],
-                          [Eth.sum(), len(sel) + rb]])
-            rhs = np.array([(yy * Eth).sum(), yy.sum()])
-            sol = np.linalg.solve(A, rhs)
-            newB[mi], newb[mi] = sol
+            ix = np.flatnonzero(M_ARR == mi)
+            k, yy = T_ARR[ix], y[ix]
+            ex, ex2 = m[k], m[k]**2 + cv[k, k]
+            w = 1 / sd[mi]**2
+            A = np.array([[w * ex2.sum() + rbias[0], w * ex.sum()],
+                          [w * ex.sum(), w * len(ix) + rbias[1]]])
+            rhs = np.array([w * (yy * ex).sum() + rbias[0], w * yy.sum()])
+            slope, offset = np.linalg.solve(A, rhs)
+            if slope < 1e-6:
+                slope = 1e-6
+                offset = w * np.sum(yy - slope * ex) / (w * len(ix) + rbias[1])
+            newB[mi], newb[mi] = slope, offset
+        for mi in range(M):
             if mi == 1:
-                continue                   # gao sigma fixed at 0.07
-            resid = yy - (sol[0] * Eth + sol[1])
-            s2 = np.mean(resid**2 + sol[0]**2 * cv[k, k])
-            newsd[mi] = 0.5 * np.log(max(s2, 1e-8))
-        delta = max(np.abs(newB - logB).max(), np.abs(newb - b).max(),
-                    np.abs(newsd - log_sd).max())
-        logB, b, log_sd = newB, newb, newsd
-        it += 1
-    m, cv = cond_theta(pm, P, y, np.exp(logB), b, np.exp(log_sd))
-    return sample_cond(m, cv, rng), it
+                continue
+            ix = np.flatnonzero(M_ARR == mi)
+            k = T_ARR[ix]
+            residual = y[ix] - newB[mi] * m[k] - newb[mi]
+            variance = np.mean(residual**2 + newB[mi]**2 * cv[k, k])
+            noise_floor_hits += int(variance < 1e-8)
+            newsd[mi] = np.sqrt(max(variance, 1e-8))
+        delta = max(np.max(np.abs(np.log(newB) - np.log(B))),
+                    np.max(np.abs(newb - b)), np.max(np.abs(np.log(newsd / sd))))
+        B, b, sd = newB, newb, newsd
+        if delta < tol:
+            break
+    d = sample_cond(*cond_theta(pm, P, y, B, b, sd), rng)
+    return d, dict(iters=it, converged=bool(delta < tol), delta=float(delta),
+                   noise_floor_hits=noise_floor_hits, min_slope=float(B.min()))
 
 
 def make_neg_logpost(y):
-    mm = jnp.asarray(M_ARR)
-    tt = jnp.asarray(T_ARR)
-    yy = jnp.asarray(y)
-    lsd_loc = jnp.log(jnp.concatenate([jnp.array([0.05]),
-                                       jnp.repeat(0.15, M - 2)]))
+    mm, tt, yy = jnp.asarray(M_ARR), jnp.asarray(T_ARR), jnp.asarray(y)
+    loc = jnp.log(jnp.r_[.05, jnp.repeat(.15, M - 2)])
 
     def nlpost(x):
-        mu0, c, rho_raw, log_sd_eta = x[0], x[1], x[2], x[3]
-        logB_f, b_f, lsd = x[4:10], x[10:16], x[16:22]
-        sd_eta = jnp.exp(log_sd_eta)
-        rho = 0.28 + 0.7 * jax.nn.sigmoid(rho_raw)
-        # jax mirror of the AR(1)-increment prior precision (as in make_model)
-        Dz = jnp.eye(T).at[jnp.arange(1, T), jnp.arange(0, T - 1)].set(-1.0)
-        q = 1.0 / sd_eta**2
-        Qz = jnp.zeros((T, T)).at[0, 0].set(1.0 / SD0**2)
+        mu0, c, rho_raw, log_sd_eta = x[:4]
+        lb, bf, lsd = x[4:4+M-1], x[4+M-1:4+2*(M-1)], x[4+2*(M-1):]
+        sd_eta, rho = jnp.exp(log_sd_eta), .28 + .7 * jax.nn.sigmoid(rho_raw)
+        D = jnp.eye(T).at[jnp.arange(1, T), jnp.arange(T-1)].set(-1.)
+        q = 1 / sd_eta**2
+        Q = jnp.zeros((T, T)).at[0, 0].set(1 / SD0**2)
         gidx = jnp.arange(1, T)
-        Qz = Qz.at[gidx, gidx].set(q * (1 + rho**2))
-        Qz = Qz.at[1, 1].set(q)
-        Qz = Qz.at[T - 1, T - 1].set(q)
-        offd = jnp.arange(2, T)
-        Qz = Qz.at[offd, offd - 1].set(-q * rho)
-        Qz = Qz.at[offd - 1, offd].set(-q * rho)
-        P_np = Dz.T @ Qz @ Dz
-        mz = jnp.concatenate([jnp.array([mu0]), jnp.full(T - 1, c)])
-        pm = jnp.linalg.solve(Dz, mz)
-        cov = jnp.linalg.inv(P_np)
-        Bf = jnp.concatenate([jnp.zeros(1), logB_f])
-        bf = jnp.concatenate([jnp.zeros(1), b_f])
-        Bobs = jnp.exp(Bf)[mm]
-        H = jnp.zeros((len(yy), T)).at[jnp.arange(len(yy)), tt].set(Bobs)
-        mean_y = H @ pm + bf[mm]
-        sd_all = jnp.concatenate([jnp.exp(lsd)[:1], jnp.array([0.07]),
-                                  jnp.exp(lsd)[1:]])
-        cov_y = H @ cov @ H.T + jnp.diag(sd_all[mm]**2)
-        ll = dist.MultivariateNormal(mean_y, covariance_matrix=cov_y).log_prob(yy)
-        lp = (dist.Normal(jnp.log(26279.0), SD0).log_prob(mu0)
-              + dist.Normal(0.02, 0.03).log_prob(c)
-              + dist.Normal(0.0, 1.0).log_prob(rho_raw)
-              + dist.HalfNormal(0.12).log_prob(sd_eta)
-              + dist.Normal(0.0, 0.25).log_prob(logB_f).sum()
-              + dist.Normal(0.0, 0.4).log_prob(b_f).sum()
-              + dist.Normal(lsd_loc, 0.4).log_prob(lsd).sum())
+        Q = Q.at[gidx, gidx].set(q * (1 + rho**2)).at[1, 1].set(q).at[T-1, T-1].set(q)
+        off = jnp.arange(2, T)
+        Q = Q.at[off, off-1].set(-q*rho).at[off-1, off].set(-q*rho)
+        cov = jnp.linalg.inv(D.T @ Q @ D)
+        pm = jnp.linalg.solve(D, jnp.r_[mu0, jnp.repeat(c, T-1)])
+        B = jnp.exp(jnp.r_[0., lb])
+        b = jnp.r_[0., bf]
+        sd = jnp.exp(jnp.r_[lsd[:1], jnp.log(.07), lsd[1:]])
+        H = jnp.zeros((len(y), T)).at[jnp.arange(len(y)), tt].set(B[mm])
+        ll = dist.MultivariateNormal(H @ pm + b[mm], covariance_matrix=
+                                    H @ cov @ H.T + jnp.diag(sd[mm]**2)).log_prob(yy)
+        lp = (dist.Normal(jnp.log(26279.), .6).log_prob(mu0)
+              + dist.Normal(.02, .03).log_prob(c)
+              + dist.Normal(0, 1).log_prob(rho_raw)
+              + dist.HalfNormal(.12).log_prob(sd_eta) + log_sd_eta
+              + dist.Normal(0, .25).log_prob(lb).sum()
+              + dist.Normal(0, .4).log_prob(bf).sum()
+              + dist.Normal(loc, .4).log_prob(lsd).sum())
         return -(ll + lp)
-
-    return nlpost
+    return jax.jit(nlpost)
 
 
 def arm_map(y, rng):
     nl = make_neg_logpost(y)
     grad = jax.jit(jax.grad(nl))
-    x0 = np.concatenate([np.array([np.log(26279.0) + rng.normal(0, 0.1),
-                                   0.02, 0.5, np.log(0.08)]),
-                         np.zeros(6), np.zeros(6),
-                         np.log(np.concatenate([[0.05], np.repeat(0.15, 5)]))])
-    best, fbest = None, np.inf
-    for s in range(2):
-        xs = x0 + rng.normal(0, 0.05, x0.shape) * s
-        res = minimize(lambda z: float(nl(jnp.asarray(z))), xs,
-                       jac=lambda z: np.asarray(grad(jnp.asarray(z))),
-                       method="L-BFGS-B", options=dict(maxiter=300))
-        if res.fun < fbest:
-            fbest, best = res.fun, res.x
-    mu0, c, rho_raw, log_sd_eta = best[:4]
-    rho = 0.28 + 0.7 * sigmoid(rho_raw)
-    pm, P = v2c.theta_prior(mu0, c, rho, np.exp(log_sd_eta), T)
-    B = np.exp(np.concatenate([[0.0], best[4:10]]))
-    b = np.concatenate([[0.0], best[10:16]])
-    sd = np.exp(np.concatenate([best[16:17], [np.log(0.07)], best[17:22]]))
-    m, cv = cond_theta(pm, P, y, B, b, sd)
-    return sample_cond(m, cv, rng)
+    x0 = np.r_[np.log(26279.), .02, 0., np.log(.08), np.zeros(2*(M-1)),
+               np.log(np.r_[.05, np.repeat(.15, M-2)])]
+    fits = []
+    for i in range(2):
+        xs = x0 + rng.normal(0, .05, len(x0)) * i
+        fit = minimize(lambda x: float(nl(jnp.asarray(x))), xs,
+                       jac=lambda x: np.asarray(grad(jnp.asarray(x))),
+                       method="L-BFGS-B", options=dict(maxiter=1500, ftol=1e-12, gtol=1e-6))
+        if np.isfinite(fit.fun):
+            fits.append(fit)
+    if not fits:
+        raise RuntimeError("No finite MAP solution")
+    best = min(fits, key=lambda f: f.fun)
+    x = best.x
+    pm, P = v2c.theta_prior(x[0], x[1], .28 + .7*expit(x[2]), np.exp(x[3]), T)
+    B = np.exp(np.r_[0., x[4:4+M-1]])
+    b = np.r_[0., x[4+M-1:4+2*(M-1)]]
+    sd = np.exp(expand_noise(x[4+2*(M-1):]))
+    info = dict(success=bool(best.success), iterations=int(best.nit),
+                gradient_max=float(np.max(np.abs(best.jac))), objective=float(best.fun))
+    return sample_cond(*cond_theta(pm, P, y, B, b, sd), rng), info
 
 
 def arm_full(y, seed):
     df = OBS_DF.copy()
     df["y"] = y
-    mcmc = MCMC(NUTS(v2c.make_model(df, T), dense_mass=False),
-                num_warmup=400, num_samples=400, num_chains=1,
-                progress_bar=False)
-    mcmc.run(jax.random.PRNGKey(seed))
-    smp = mcmc.get_samples()
-    S = smp["mu0"].shape[0]
-    draws = np.empty((T, S))
-    rng = np.random.default_rng(seed)
-    for s in range(S):
-        phi = dict(mu0=float(smp["mu0"][s]), c=float(smp["c"][s]),
-                   rho=float(smp["rho"][s]), sd_eta=float(smp["sd_eta"][s]),
-                   logB=np.concatenate([[0.0], np.asarray(smp["logB_f"][s])]),
-                   b=np.concatenate([[0.0], np.asarray(smp["b_f"][s])]),
-                   log_sd_m=np.concatenate(
-                       [[np.asarray(smp["log_sd_m_free"][s])[0]], [np.log(0.07)],
-                        np.asarray(smp["log_sd_m_free"][s])[1:]]))
-        m, cv = v2c.theta_posterior(phi, df, T)
-        draws[:, s] = rng.multivariate_normal(m, cv)
-    div = int(np.asarray(mcmc.get_extra_fields()["diverging"]).sum())
-    return draws, div
+    mc = MCMC(NUTS(v2c.make_model(df, T), target_accept_prob=.9),
+              num_warmup=600, num_samples=800, num_chains=2,
+              chain_method="sequential", progress_bar=False)
+    mc.run(jax.random.PRNGKey(seed))
+    samples = mc.get_samples()
+    n = len(samples["mu0"])
+    draws = np.empty((T, n))
+    rng = np.random.default_rng(seed + 10000)
+    for s in range(n):
+        phi = dict(mu0=float(samples["mu0"][s]), c=float(samples["c"][s]),
+                   rho=float(samples["rho"][s]), sd_eta=float(samples["sd_eta"][s]),
+                   logB=np.r_[0., np.asarray(samples["logB_f"][s])],
+                   b=np.r_[0., np.asarray(samples["b_f"][s])],
+                   log_sd_m=expand_noise(samples["log_sd_m_free"][s]))
+        cm, ck = v2c.theta_posterior(phi, df, T)
+        draws[:, s] = rng.multivariate_normal(cm, ck)
+    dg = chain_summary(mc.get_samples(group_by_chain=True), group_by_chain=True)
+    rhats = np.concatenate([np.atleast_1d(v["r_hat"]).ravel() for v in dg.values()])
+    esses = np.concatenate([np.atleast_1d(v["n_eff"]).ravel() for v in dg.values()])
+    return draws, dict(divergences=int(mc.get_extra_fields()["diverging"].sum()),
+                       max_rhat=float(np.nanmax(rhats)), min_ess=float(np.nanmin(esses)))
 
 
-def metrics(draws, theta_true, test_idx):
-    ranks, cov = [], []
-    for k in test_idx:
-        d = draws[k, :]
-        ranks.append(float((d < theta_true[k]).mean()))
-        lo, hi = np.quantile(d, [0.05, 0.95])
-        cov.append(bool(lo <= theta_true[k] <= hi))
-    return ranks, cov
+def metrics(draws, truth, test_idx):
+    values = draws[test_idx]
+    ranks = np.mean(values < truth[test_idx, None], axis=1)
+    lo, hi = np.quantile(values, [.05, .95], axis=1)
+    covered = (lo <= truth[test_idx]) & (truth[test_idx] <= hi)
+    return ranks, covered
 
 
-def run(tag, R):
-    rows = []
-    t0 = time.time()
-    for rep in range(R):
-        rng = np.random.default_rng(91000 + rep)
+def run(tag, reps):
+    RES.mkdir(parents=True, exist_ok=True)
+    rows, details = [], {}
+    started = time.monotonic()
+    for rep in range(reps):
+        rng = np.random.default_rng(92000 + rep)
         phi = draw_phi(rng)
-        theta = sim_theta(phi, rng)
-        y = sim_y(phi, theta, rng, gao_rho=0.7 if tag == "misspec" else 0.0)
-        test_idx = rng.choice(T, size=8, replace=False)
-        rec = dict(rep=rep)
+        truth = sim_theta(phi, rng)
+        y = sim_y(phi, truth, rng, .7 if tag == "misspec" else 0.)
+        test_idx = rng.choice(T, 8, replace=False)
+        rec = dict(rep=rep, seed=92000+rep,
+                   data_sha256=hashlib.sha256(y.tobytes()).hexdigest())
+        details[f"truth_{rep}"] = truth
+        details[f"y_{rep}"] = y
+        details[f"test_idx_{rep}"] = test_idx
+        details[f"phi_{rep}"] = np.r_[phi["mu0"], phi["c"], phi["rho"], phi["sd_eta"],
+                                         phi["logB"], phi["b"], phi["log_sd_m"]]
+        arms = {}
         if tag == "main":
-            d, _ = arm_oracle(phi, y, rng)
-            r, c = metrics(d, theta, test_idx)
-            rec["oracle_cov"] = float(np.mean(c))
-            rec["oracle_rank_mean"] = float(np.mean(r))
-            d, it = arm_em(phi, y, rng)
-            r, c = metrics(d, theta, test_idx)
-            rec["em_cov"] = float(np.mean(c))
-            rec["em_rank_mean"] = float(np.mean(r))
-            rec["em_iters"] = int(it)
-            d = arm_map(y, rng)
-            r, c = metrics(d, theta, test_idx)
-            rec["map_cov"] = float(np.mean(c))
-            rec["map_rank_mean"] = float(np.mean(r))
-        d, div = arm_full(y, 42000 + rep)
-        r, c = metrics(d, theta, test_idx)
-        rec["full_cov"] = float(np.mean(c))
-        rec["full_rank_mean"] = float(np.mean(r))
-        rec["divergences"] = div
+            arms["oracle"] = arm_oracle(phi, y, np.random.default_rng(101000+rep))
+            for name, ridge in [("em", False), ("emreg", True)]:
+                d, info = arm_em(phi, y, np.random.default_rng(102000+rep), ridge=ridge)
+                arms[name] = d
+                rec.update({name+"_"+k: v for k, v in info.items()})
+            d, info = arm_map(y, np.random.default_rng(103000+rep))
+            arms["map"] = d
+            rec.update({"map_"+k: v for k, v in info.items()})
+        d, info = arm_full(y, 43000+rep)
+        arms["full"] = d
+        rec.update(info)
+        for name, draws in arms.items():
+            ranks, cov = metrics(draws, truth, test_idx)
+            rec[name+"_cov"] = float(cov.mean())
+            rec[name+"_rank_mean"] = float(ranks.mean())
+            rec[name+"_rank_one"] = float(ranks[0])
+            details[f"{name}_ranks_{rep}"] = ranks
+            details[f"{name}_covered_{rep}"] = cov
         rows.append(rec)
-        print(f"[{tag}] rep {rep+1}/{R} "
-              + " ".join(f"{k}={rec[k]:.2f}" for k in rec if k.endswith("_cov"))
-              + f"  ({(time.time()-t0)/60:.1f} min)", flush=True)
+        pd.DataFrame(rows).to_csv(RES / f"sbc_{tag}.csv", index=False)
+        np.savez_compressed(RES / f"sbc_{tag}_details.npz", **details)
+        print(f"{tag} {rep+1}/{reps} " + " ".join(f"{a}={rec[a+'_cov']:.3f}" for a in arms)
+              + f" div={info['divergences']} elapsed={(time.monotonic()-started)/60:.1f}m", flush=True)
     df = pd.DataFrame(rows)
-    df.to_csv(RES / f"sbc_prod_{tag}.csv", index=False)
-    summary = {}
-    for col in [c for c in df.columns if c.endswith("_cov")]:
-        v = df[col].dropna()
-        summary[col] = dict(mean=float(v.mean()),
-                            mc_se=float(v.std(ddof=1) / np.sqrt(len(v))),
-                            n=int(len(v)))
-    if "em_iters" in df.columns:
-        summary["em_iters_median"] = float(df["em_iters"].median())
-    summary["divergences_total"] = int(df["divergences"].sum())
-    (RES / f"sbc_prod_{tag}_summary.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8")
-    print(json.dumps(summary, indent=2))
+    report = dict(generator="production priors including random anchor noise; exact AR prior",
+                  test_states_per_replicate=8, replicates=reps, warmup_per_chain=600,
+                  retained_per_chain=800, chains=2, divergences=int(df.divergences.sum()),
+                  max_rhat=float(df.max_rhat.max()), min_ess=float(df.min_ess.min()),
+                  seconds=time.monotonic()-started)
+    for name in arms:
+        cov, ranks = df[name+"_cov"], df[name+"_rank_mean"]
+        report[name] = dict(coverage=float(cov.mean()), mc_se=float(cov.std(ddof=1)/np.sqrt(reps)),
+                            rank_mean=float(ranks.mean()),
+                            rank_mc_se=float(ranks.std(ddof=1)/np.sqrt(reps)))
+    report["em_converged"] = int(df.em_converged.sum()) if "em_converged" in df else None
+    report["emreg_converged"] = int(df.emreg_converged.sum()) if "emreg_converged" in df else None
+    report["map_successes"] = int(df.map_success.sum()) if "map_success" in df else None
+    (RES / f"sbc_{tag}_summary.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, indent=2), flush=True)
 
 
 if __name__ == "__main__":
-    tag = sys.argv[1] if len(sys.argv) > 1 else "main"
-    R = int(sys.argv[2]) if len(sys.argv) > 2 else 32
-    run(tag, R)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tag", choices=["main", "misspec"])
+    parser.add_argument("replicates", nargs="?", type=int, default=32)
+    opts = parser.parse_args()
+    if opts.replicates < 2:
+        parser.error("At least two replicates are required to estimate Monte Carlo error")
+    run(opts.tag, opts.replicates)

@@ -40,8 +40,8 @@ def F_mix(C):
 
 
 def L(C, k, p, h):
-    per_year = p * np.maximum(Gy - C, 0).mean(axis=1) + h * np.maximum(C - Gy).mean(axis=1) if False else \
-        p * np.maximum(Gy - C, 0).mean(axis=1) + h * np.maximum(C - Gy, 0).mean(axis=1)
+    per_year = (p * np.maximum(Gy - C, 0).mean(axis=1)
+                + h * np.maximum(C - Gy, 0).mean(axis=1))
     return k * C + per_year.mean()
 
 
@@ -98,7 +98,7 @@ pd.DataFrame([dict(policy="point (median of year-marginal mixture)", **pt),
     RES / "decision_value_annual.csv", index=False)
 
 rows = []
-for p in [70.0, 95.0, 120.0, 140.0]:
+for p in [30.0, 37.0, 70.0, 95.0, 120.0, 140.0, 200.0]:
     for h in [2.5, 25.0, 45.0]:
         Cs, tg = solve_C(K, p, h)
         pp = evaluate(C_point, K, p, h)

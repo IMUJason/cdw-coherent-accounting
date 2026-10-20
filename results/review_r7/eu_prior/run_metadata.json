@@ -1,0 +1,103 @@
+{
+  "task": "bounded EU full-panel measurement-prior-location sensitivity",
+  "scope": "two arms only; full EU27 panel; no rolling-origin or masked-state reruns",
+  "data": {
+    "files": [
+      "data/eurostat/env_wasgen_W121_TOTAL_HH.csv",
+      "data/eurostat/env_wasgen_W121_F.csv"
+    ],
+    "sha256": {
+      "data/eurostat/env_wasgen_W121_TOTAL_HH.csv": "440d28a2d0a8d119c243d89ee6dc79b56deccb63f2ab347b5cd86c78c4e93a4a",
+      "data/eurostat/env_wasgen_W121_F.csv": "9bd61069a4f931ef765ac3a3193660a82d1dbbbced13403b10e95eb1c2b82ec0"
+    },
+    "observations": 376,
+    "countries": 27,
+    "years": [
+      2010,
+      2012,
+      2014,
+      2016,
+      2018,
+      2020,
+      2022
+    ],
+    "empirical_F_TOTAL_ratio": {
+      "n": 187,
+      "median": 0.811,
+      "p25": 0.623,
+      "p75": 0.975,
+      "note": "Descriptive panel ratio; slope prior is not centered on this ratio."
+    }
+  },
+  "model": {
+    "only_changed_parameter": "logB_F prior location",
+    "baseline_logB_loc": -0.2,
+    "sensitivity_logB_loc": 0.0,
+    "logB_scale": 0.3,
+    "b_F_prior": "Normal(0, 0.5)",
+    "all_other_model_settings_unchanged": true,
+    "ratio_formula": "exp((exp(logB_F)-1)*theta_ref+b_F)",
+    "common_theta_ref": 14.20353855372245,
+    "common_theta_ref_definition": "median of all baseline posterior conditional log-theta draws across member-wave cells",
+    "empirical_ratio_is_not_B_or_coverage_slope": true
+  },
+  "sampler": {
+    "engine": "NumPyro NUTS",
+    "chains": 2,
+    "chain_method": "sequential",
+    "warmup_per_chain": 600,
+    "retained_draws_per_chain": 600,
+    "target_accept": 0.9,
+    "float64": true,
+    "jax_version": "0.6.2",
+    "numpyro_version": "0.19.0",
+    "numpy_version": "2.2.6"
+  },
+  "runs": [
+    {
+      "arm": "baseline",
+      "logB_loc": -0.2,
+      "seed": 20261020,
+      "state_draw_seed": 20271020,
+      "runtime_seconds": 1719.405999999959,
+      "divergences_total": 0,
+      "divergences_by_chain": [
+        0,
+        0
+      ],
+      "max_r_hat": 1.0003240984804787,
+      "min_ess": 1273.0035561810794
+    },
+    {
+      "arm": "loc0",
+      "logB_loc": 0.0,
+      "seed": 20261021,
+      "state_draw_seed": 20271021,
+      "runtime_seconds": 1606.719000000041,
+      "divergences_total": 0,
+      "divergences_by_chain": [
+        0,
+        0
+      ],
+      "max_r_hat": 1.0035015183044895,
+      "min_ess": 722.4558829079316
+    }
+  ],
+  "limits": [
+    "This is a bounded sensitivity comparison, not a full refit/backtest robustness study.",
+    "Posterior changes reflect both prior-location and finite MCMC Monte Carlo variability.",
+    "Member and aggregate levels are posterior summaries within the stated model and anchor scope; they do not establish independent truth."
+  ],
+  "output_files": [
+    "aggregate_level_comparison.csv",
+    "aggregate_levels_Mt.csv",
+    "baseline_diagnostics.csv",
+    "baseline_posterior_draws.npz",
+    "loc0_diagnostics.csv",
+    "loc0_posterior_draws.npz",
+    "member_level_comparison.csv",
+    "member_levels_Mt.csv",
+    "run_metadata.json",
+    "source_ratio_at_common_theta.csv"
+  ]
+}

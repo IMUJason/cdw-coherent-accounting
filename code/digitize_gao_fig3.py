@@ -15,16 +15,9 @@ import pandas as pd
 import pymupdf
 
 ROOT = Path(__file__).resolve().parents[1]
-# Open-access source PDF: DOI 10.3390/su17041711 (Sustainability 17(4):1711).
-# Download it manually and place it at data/source_pdfs/gao2025_sustainability.pdf
-# (the PDF is not redistributed in this repository).
-PDF = ROOT / "data" / "source_pdfs" / "gao2025_sustainability.pdf"
+PDF = ROOT / "data" / "source_pdfs" / "Gao2025_grey_china.pdf"
 OUT = ROOT / "data" / "china"
 
-if not PDF.exists():
-    raise FileNotFoundError(
-        f"Source PDF missing: {PDF}. Download DOI 10.3390/su17041711 "
-        "and save it under that name.")
 doc = pymupdf.open(str(PDF))
 page = doc[13]  # page 14 (0-based)
 DPI = 400

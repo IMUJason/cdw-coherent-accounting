@@ -101,7 +101,8 @@ def theta_posterior(phi, df, T):
     return cov @ r, cov
 
 
-def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6):
+def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6,
+               logB_scale=0.25, offset_scale=0.4):
     m_arr = df["m"].to_numpy().astype(int)
     t_arr = df["t"].to_numpy().astype(int)
     y_arr = df["y"].to_numpy()
@@ -117,8 +118,8 @@ def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6):
         if unit_slopes:
             logB_f = numpyro.deterministic("logB_f", jnp.zeros(M - 1))
         else:
-            logB_f = numpyro.sample("logB_f", dist.Normal(0.0, 0.25).expand([M - 1]))
-        b_f = numpyro.sample("b_f", dist.Normal(0.0, 0.4).expand([M - 1]))
+            logB_f = numpyro.sample("logB_f", dist.Normal(0.0, logB_scale).expand([M - 1]))
+        b_f = numpyro.sample("b_f", dist.Normal(0.0, offset_scale).expand([M - 1]))
         log_sd_m_free = numpyro.sample(
             "log_sd_m_free",
             dist.Normal(jnp.log(jnp.array([0.05] + [0.15] * (M - 2))),
@@ -170,7 +171,7 @@ def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6):
 def main(mu0_scale=0.6, seed=45, out_suffix="v2c", state_seed=45001):
     df = load_obs()
     M = len(FIT_SOURCES)
-    tag = "" if out_suffix == "v2c" else f"_{out_suffix}"
+    tag = f"_{out_suffix}" if out_suffix else ""
     mcmc = MCMC(NUTS(make_model(df, T, mu0_scale=mu0_scale)), num_warmup=1500, num_samples=1500,
                 num_chains=1, progress_bar=False)
     mcmc.run(jax.random.PRNGKey(seed))

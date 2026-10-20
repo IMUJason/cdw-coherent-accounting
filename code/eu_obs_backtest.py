@@ -7,7 +7,11 @@ official TOTAL_HH value under two explicitly defined targets:
   obs    : 90% predictive interval of a FUTURE REPORT y = theta + eps,
            eps ~ N(0, sigma_anchor^2) with sigma_anchor drawn per posterior
            draw (measurement noise propagated).
-Reports coverage, interval score, and median width for both targets.
+Reports coverage, interval score, and relative interval width (width / truth)
+for both targets. The default logB_F~Normal(-0.2, 0.3) is a prior on the
+non-anchor log slope, not a coverage ratio; b_F is an offset and is a log ratio
+only when B_F=1. The fit helper accepts an optional logB_loc, defaulting to
+-0.2 to preserve the production model.
 Output: results/review_r5/eu_obs_backtest.csv
 """
 import sys
@@ -25,8 +29,8 @@ from eu_testbed import EU27, load_panel, make_model  # noqa: E402
 RES = ROOT / "results" / "review_r5"
 
 
-def fit(df_tr, C, T, level0, seed):
-    mcmc = MCMC(NUTS(make_model(df_tr, C, T, level0), dense_mass=False),
+def fit(df_tr, C, T, level0, seed, logB_loc=-0.2):
+    mcmc = MCMC(NUTS(make_model(df_tr, C, T, level0, logB_loc=logB_loc), dense_mass=False),
                 num_warmup=600, num_samples=600, num_chains=1,
                 progress_bar=False)
     mcmc.run(jax.random.PRNGKey(seed))
@@ -73,7 +77,7 @@ def country_draws(smp, df_tr, C, T, rng):
                         sd = float(np.exp(log_sd_m[s, 0]))
                     else:
                         coef = float(np.exp(logB_F[s]))
-                        off = float(b_F[s])
+                        off = float(b_F[s])  # offset; log ratio only when B_F=1
                         sd = float(np.exp(log_sd_m[s, 1]))
                     w = coef / sd**2
                     Pp[k, k] += coef * w

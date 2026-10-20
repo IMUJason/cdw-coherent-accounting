@@ -1,0 +1,50 @@
+{
+  "fit": {
+    "observations": 29,
+    "withheld_observations": 1,
+    "withheld_source_id": "meescc_2025",
+    "withheld_year": 2024,
+    "withheld_value_Gt": 2.31,
+    "seed": 51,
+    "warmup": 1500,
+    "retained_draws": 1500,
+    "chains": 1,
+    "target_accept": 0.9,
+    "jax_x64": true
+  },
+  "conditional_draws": {
+    "retained_hyper_draws": 750,
+    "latent_state_seed": 51001,
+    "anchor_observation_seed": 51002
+  },
+  "diagnostics": {
+    "divergences": 0,
+    "max_r_hat": 1.00471023416826,
+    "min_ess": 1351.9270143219753
+  },
+  "holdout": {
+    "latent_state": {
+      "median_Gt": 2.4970510093873335,
+      "lo90_Gt": 2.158570714526433,
+      "hi90_Gt": 2.8782561522777
+    },
+    "future_anchor_report": {
+      "median_Gt": 2.500006038171191,
+      "lo90_Gt": 2.0951014664544605,
+      "hi90_Gt": 2.9741828809542663
+    }
+  },
+  "same_source_check": {
+    "source": "Gao et al. (2025)",
+    "year": 2023,
+    "published_forecast_Gt": 2.39,
+    "production_posterior_median_Gt": 2.359770632857099,
+    "published_forecast_posterior_percentile": 0.632,
+    "interpretation": "consistency only; the historical Gao series is in the fit"
+  },
+  "runtime_seconds": 13.155999999959022,
+  "jax_version": "0.6.2",
+  "numpyro_version": "0.19.0",
+  "numpy_version": "2.2.6",
+  "output": "results/external_consistency_r7.csv"
+}

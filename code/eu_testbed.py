@@ -2,17 +2,22 @@
 
 Two observation processes per country:
   source 1 = env_wasgen W121 TOTAL_HH  (anchor: B=1, b=0 -- "official total caliber")
-  source 2 = env_wasgen W121 F         (construction-sector caliber: B_F, b_F free)
+  source 2 = env_wasgen W121 F         (construction-sector caliber: slope B_F, offset b_F)
 
 Experiments:
-  E1 two-caliber fit: B_F posterior should land near the empirical F/TOTAL ratio
-     (~0.82 median); theta should track TOTAL_HH closely. Validates machinery on
-     real data.
+  E1 two-caliber fit: estimate the F-caliber slope and offset. The empirical
+     F/TOTAL ratio is a level ratio, r(theta)=exp((B_F-1)*theta+b_F), not B_F;
+     compare it with posterior-implied ratios evaluated at the relevant theta.
   E2 mask-recovery: mask BOTH sources for the last two waves (2020, 2022) of a
      mid-size country (IE) and the largest (DE); posterior predictive vs truth;
      benchmark against persistence (last obs carried forward).
   E3 hierarchy check: posterior sum over EU27 members vs the official EU27_2020
      aggregate series (coherent truth, verified in S1).
+
+The default prior logB_F ~ Normal(-0.2, 0.3) is on the log slope, not on the
+empirical coverage ratio. b_F is a log-scale offset and is a log ratio only
+when B_F=1. The default is retained; make_model/fit accept an optional prior
+location for bounded sensitivity checks.
 
 Collapsed inference identical in structure to s2_sbc_bayes.py (NUTS on hyperparams,
 exact Gaussian theta | phi), with per-country level mu0_c and shared drift.
@@ -96,7 +101,7 @@ def theta_posterior(phi, df, C, T):
             coef, off, sd = 1.0, 0.0, sd_m[0]
         else:
             coef = np.exp(BF)
-            off = bF  # uncentered: level ratios live in b_F = log(ratio)
+            off = bF  # b_F is an offset; it is a log ratio only when B_F=1
             sd = sd_m[1]
         y = row.y - off
         w = coef / sd**2
@@ -106,7 +111,7 @@ def theta_posterior(phi, df, C, T):
     return cov @ r, cov
 
 
-def make_model(df, C, T, level0):
+def make_model(df, C, T, level0, logB_loc=-0.2):
     m_arr = df["m"].to_numpy().astype(int)
     idx_arr = (df["c"] * T + df["t"]).to_numpy().astype(int)
     y_arr = df["y"].to_numpy()
@@ -117,7 +122,7 @@ def make_model(df, C, T, level0):
         mu0 = numpyro.sample("mu0", dist.Normal(level0_arr, 0.75))
         drift = numpyro.sample("drift", dist.Normal(0.0, 0.10))
         log_sd_theta = numpyro.sample("log_sd_theta", dist.Normal(-1.5, 0.7))
-        logB_F = numpyro.sample("logB_F", dist.Normal(-0.2, 0.3))
+        logB_F = numpyro.sample("logB_F", dist.Normal(logB_loc, 0.3))
         b_F = numpyro.sample("b_F", dist.Normal(0.0, 0.5))
         log_sd_m = numpyro.sample("log_sd_m", dist.Normal(jnp.array([-2.0, -1.5]),
                                                           jnp.array([0.6, 0.6])))
@@ -139,7 +144,7 @@ def make_model(df, C, T, level0):
         P = P.at[iN, iN - 1].add(-q)
         cov_theta = jnp.linalg.inv(P)
         coef = jnp.where(m_arr == 0, 1.0, jnp.exp(logB_F))
-        off = jnp.where(m_arr == 0, 0.0, b_F)  # uncentered: b_F = log-ratio offset
+        off = jnp.where(m_arr == 0, 0.0, b_F)  # b_F is an offset; log ratio only if B_F=1
         sd_obs = jnp.exp(log_sd_m)[m_arr]
         H = jnp.zeros((nobs, C * T))
         H = H.at[jnp.arange(nobs), idx_arr].set(coef)
@@ -151,24 +156,25 @@ def make_model(df, C, T, level0):
     return model
 
 
-def fit(df, C, T, level0, seed=0, warm=600, samp=600):
-    mcmc = MCMC(NUTS(make_model(df, C, T, level0)), num_warmup=warm,
+def fit(df, C, T, level0, seed=0, warm=600, samp=600, logB_loc=-0.2):
+    mcmc = MCMC(NUTS(make_model(df, C, T, level0, logB_loc=logB_loc)), num_warmup=warm,
                 num_samples=samp, num_chains=1, progress_bar=False)
     mcmc.run(jax.random.PRNGKey(seed))
     return mcmc.get_samples()
 
 
-def theta_mixture(smp, df, C, T, thin=2):
+def theta_mixture(smp, df, C, T, thin=2, seed=17001):
     take = np.arange(0, smp["mu0"].shape[0], thin)
     S = len(take)
     draws = np.empty((C * T, S))
+    rng = np.random.default_rng(seed)
     for si, s in enumerate(take):
         phis = dict(mu0=np.asarray(smp["mu0"][s]), drift=float(smp["drift"][s]),
                     sd_theta=float(np.exp(smp["log_sd_theta"][s])),
                     logB_F=float(smp["logB_F"][s]), b_F=float(smp["b_F"][s]),
                     sd_m=np.exp(np.asarray(smp["log_sd_m"][s])))
         mth, cth = theta_posterior(phis, df, C, T)
-        draws[:, si] = np.random.multivariate_normal(mth, cth)
+        draws[:, si] = rng.multivariate_normal(mth, cth)
     return draws
 
 
@@ -194,11 +200,16 @@ def main():
     smp = fit(df, C, T, level0, seed=7)
     BF = np.exp(np.asarray(smp["logB_F"]))
     bF = np.asarray(smp["b_F"])
-    print(f"[E1] B_F posterior: mean={BF.mean():.3f} "
-          f"90%CI=({np.quantile(BF,.05):.3f},{np.quantile(BF,.95):.3f}) "
-          f"(empirical median {ratio.median():.3f})")
-    print(f"[E1] b_F posterior: mean={bF.mean():.3f} "
+    print(f"[E1] B_F slope posterior: mean={BF.mean():.3f} "
+          f"90%CI=({np.quantile(BF,.05):.3f},{np.quantile(BF,.95):.3f})")
+    print(f"[E1] b_F offset posterior: mean={bF.mean():.3f} "
           f"90%CI=({np.quantile(bF,.05):.3f},{np.quantile(bF,.95):.3f})")
+    theta_ref = float(np.median(mg["y_tot"]))
+    ratio_at_ref = np.exp((BF - 1.0) * theta_ref + bF)
+    print(f"[E1] implied F/TOTAL level ratio at median observed anchor theta={theta_ref:.3f}: "
+          f"median={np.median(ratio_at_ref):.3f} "
+          f"90%CI=({np.quantile(ratio_at_ref,.05):.3f},{np.quantile(ratio_at_ref,.95):.3f}); "
+          f"empirical median={ratio.median():.3f}")
     np.save(RES / "e1_samples_logBF.npy", np.asarray(smp["logB_F"]))
 
     # theta mixture for hierarchy check
@@ -238,7 +249,8 @@ def main():
             lo, med, hi = np.quantile(d, [0.05, 0.5, 0.95])
             tru = float(np.exp(held[held["t"] == ti]["y"]).iloc[0])
             # persistence baseline: last observed TOTAL_HH of this country
-            last_obs = df_sub[(df_sub["c"] == c) & (df_sub["m"] == 0)]["y"].max()
+            history = df_sub[(df_sub["c"] == c) & (df_sub["m"] == 0)].sort_values("time")
+            last_obs = history["y"].iloc[-1]
             pers = np.exp(last_obs)
             out.append(dict(geo=geo, year=years[ti], truth_Mt=tru / 1e6,
                             pred_Mt=med / 1e6, lo=lo / 1e6, hi=hi / 1e6,
