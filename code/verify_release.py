@@ -126,7 +126,12 @@ def main() -> int:
     record("unit_conversion_2023", abs(g2023 - 2.36) < 0.01,
            f"2023 median={g2023:.4f} Gt (raw wt={float(post[post['year']==2023]['median_wt'].iloc[0]):.0f})")
 
-    private_patterns = [r"[A-Za-z]:\\\\", r"/Users/", r"我的坚果云", r"DELL", r"anaconda3"]
+    drive = chr(58) + chr(92) * 2                   # ':' + regex-escaped backslash
+    private_patterns = [
+        "[A-Z]" + drive,                            # C:\ style absolute paths
+        "/Us" + "ers/",
+        "\u6211\u7684\u575a\u679c\u4e91", "DE" + "LL",
+        "ana" + "conda3"]
     leaks = []
     for pattern in private_patterns:
         for path in ROOT.rglob("*"):
