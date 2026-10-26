@@ -19,7 +19,7 @@ from numpyro.infer import MCMC, NUTS
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "code"))
 import w3_china_national_v2c as v2c  # noqa: E402
 
 OUT = ROOT / "results" / "review_r7" / "loso"

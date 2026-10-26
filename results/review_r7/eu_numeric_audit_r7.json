@@ -4,8 +4,11 @@
     "matched_country_window_pairs": 53,
     "W1_n": 26,
     "W2_n": 27,
-    "join_keys": ["window", "geo"],
-    "bootstrap_vs_dual_target_max_truth_difference_tonnes": 1.1920928955078125e-7
+    "join_keys": [
+      "window",
+      "geo"
+    ],
+    "bootstrap_vs_dual_target_max_truth_difference_tonnes": 1.1920928955078125e-07
   },
   "windows": {
     "W1": {
@@ -63,7 +66,10 @@
     "dual_target_interval_results": "results/review_r5/eu_obs_backtest.csv; scripts/eu_obs_backtest.py specifies 600 warmup + 600 retained draws per window. This is the newer dual-target run.",
     "bootstrap": "results/ar_bootstrap_baseline.csv; 2,000 residual bootstrap draws; exact 53 geo-window targets matched to dual-target CSV.",
     "point_MdAPE": "results/eu_forecast_W1.csv and results/eu_forecast_W2.csv; scripts/w3_eu_forecast.py specifies 800 warmup + 800 retained draws per window. Kept distinct from newer 600+600 dual-target intervals. Persistence prediction is the last training observation.",
-    "logs": ["results/review_r5/eu_obs_backtest.log", "results/w3_eu_forecast.log"]
+    "logs": [
+      "results/review_r5/eu_obs_backtest.log",
+      "results/w3_eu_forecast.log"
+    ]
   },
   "definitions": {
     "coverage": "fraction of held-out TOTAL_HH report values inside nominal 90% interval",
@@ -73,7 +79,7 @@
   },
   "prior_sensitivity": {
     "script": "results/review_r7/eu_prior/eu_prior_sensitivity.py",
-    "status_at_audit": "incomplete; no completed fit outputs",
+    "status_at_audit": "incomplete; no completed fit outputs [historical snapshot; superseded by results/review_r7/eu_prior/ (baseline and loc0 arms completed)]",
     "actually_started": "baseline full-panel arm logB_loc=-0.2, NumPyro NUTS, JAX float64, two sequential chains, 600 warmup and 600 retained draws per chain, seed 20261020; process was still present at last status check",
     "not_started": "logB_loc=0 arm",
     "diagnostics_deltas_metadata": "not available yet; no posterior/diagnostic/metadata result files had been written"
