@@ -89,7 +89,7 @@ matplotlib
 pymupdf       # only for digitize_gao_fig3.py
 ```
 
-CPU only. Diagnostic and sensitivity scripts except mu0_sensitivity.py enable JAX float64; the archived production, constant-drift, EU and mu0-sensitivity runs used the JAX default (float32 for sampled hyperparameters). All runs fix their seeds except the constant-drift state sampling (see below).
+CPU only. Diagnostic and sensitivity scripts except mu0_sensitivity.py enable JAX float64; the archived production, constant-drift, EU validation and mu0-sensitivity runs used the JAX default (float32 for sampled hyperparameters). All runs fix their seeds except the constant-drift state sampling (see below).
 Exact floating-point reproduction across JAX/NumPyro versions or platforms
 is not guaranteed; released CSV/JSON outputs are the reference.
 
@@ -165,7 +165,7 @@ python code/verify_release.py
 | `results/review_r7/censored/*` | `review_r7_censored.py` |
 | `results/review_r7/loso/*` | `review_r7_loso.py` |
 | `results/review_r7/dynprior/*` | `review_r7_dynprior.py` |
-| `results/review_r7/eu_prior/baseline_posterior_draws.npz` | `eu_prior_sensitivity.py` (pooled two-chain baseline draws behind the quoted E1 intervals) |
+| `results/review_r7/eu_prior/*_posterior_draws.npz` | `eu_prior_sensitivity.py` (pooled draws behind the quoted E1 interval; `baseline_diagnostics.csv` 5%/95% columns are means of per-chain quantiles, not pooled) |
 | `results/review_r15_noise_prior/*` | `review_r15_noise_prior.py` |
 | `results/china_forecast.csv` | `w3_china_national.py` (archived run; state sampling unseeded) |
 | `results/china_hyper_draws_v2c.npy` | `w3_china_national_v2c.py` (production kappa/rho/sigma draws) |

@@ -63,13 +63,10 @@
     }
   },
   "provenance": {
-    "dual_target_interval_results": "results/review_r5/eu_obs_backtest.csv; scripts/eu_obs_backtest.py specifies 600 warmup + 600 retained draws per window. This is the newer dual-target run.",
+    "dual_target_interval_results": "results/review_r5/eu_obs_backtest.csv; code/eu_obs_backtest.py specifies 600 warmup + 600 retained draws per window. This is the newer dual-target run.",
     "bootstrap": "results/ar_bootstrap_baseline.csv; 2,000 residual bootstrap draws; exact 53 geo-window targets matched to dual-target CSV.",
-    "point_MdAPE": "results/eu_forecast_W1.csv and results/eu_forecast_W2.csv; scripts/w3_eu_forecast.py specifies 800 warmup + 800 retained draws per window. Kept distinct from newer 600+600 dual-target intervals. Persistence prediction is the last training observation.",
-    "logs": [
-      "results/review_r5/eu_obs_backtest.log",
-      "results/w3_eu_forecast.log"
-    ]
+    "point_MdAPE": "results/eu_forecast_W1.csv and results/eu_forecast_W2.csv; code/w3_eu_forecast.py specifies 800 warmup + 800 retained draws per window. Kept distinct from newer 600+600 dual-target intervals. Persistence prediction is the last training observation.",
+    "logs": "archived logs are not shipped; see code/eu_obs_backtest.py and code/w3_eu_forecast.py for the corresponding run specifications"
   },
   "definitions": {
     "coverage": "fraction of held-out TOTAL_HH report values inside nominal 90% interval",
@@ -78,10 +75,10 @@
     "MdAPE": "median absolute percentage point-prediction error"
   },
   "prior_sensitivity": {
-    "script": "results/review_r7/eu_prior/eu_prior_sensitivity.py",
+    "script": "code/eu_prior_sensitivity.py",
     "status_at_audit": "incomplete; no completed fit outputs [historical snapshot; superseded by results/review_r7/eu_prior/ (baseline and loc0 arms completed)]",
     "actually_started": "baseline full-panel arm logB_loc=-0.2, NumPyro NUTS, JAX float64, two sequential chains, 600 warmup and 600 retained draws per chain, seed 20261020; process was still present at last status check",
-    "not_started": "logB_loc=0 arm",
+    "not_started": "logB_loc=0 arm (completed; see results/review_r7/eu_prior/loc0_*)",
     "diagnostics_deltas_metadata": "not available yet; no posterior/diagnostic/metadata result files had been written"
   },
   "limitations": [

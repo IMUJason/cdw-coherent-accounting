@@ -126,6 +126,10 @@ def fit_arm(arm: dict, df: pd.DataFrame, level0: list[float], C: int, T: int) ->
         raise ValueError(f"Unexpected divergence shape {divergence.shape} for {name}")
     state_seed = int(arm["seed"]) + 10000
     theta_log = posterior_state_draws(flat, df, C, T, state_seed)
+    np.savez_compressed(OUT / f"{name}_posterior_draws.npz",
+                        theta_log=theta_log,
+                        logB_F=flat["logB_F"],
+                        b_F=flat["b_F"])
 
     return {
         "arm": name,
@@ -202,6 +206,7 @@ def main() -> None:
     if not jax.config.x64_enabled:
         raise RuntimeError("JAX float64 is not enabled")
     output_names = {
+        "baseline_posterior_draws.npz", "loc0_posterior_draws.npz",
         "baseline_diagnostics.csv", "loc0_diagnostics.csv", "source_ratio_at_common_theta.csv",
         "member_levels_Mt.csv", "aggregate_levels_Mt.csv", "member_level_comparison.csv",
         "aggregate_level_comparison.csv", "run_metadata.json",
