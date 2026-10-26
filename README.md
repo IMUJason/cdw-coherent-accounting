@@ -120,6 +120,7 @@ python code/review_r7_censored.py
 python code/review_r7_loso.py
 python code/review_r7_dynprior.py
 python code/review_r15_noise_prior.py
+python code/w3_china_national.py   # constant-drift variant (archived: state sampling unseeded)
 
 # Deterministic 2024-anchor holdout and same-source consistency check
 python code/external_consistency.py
@@ -164,6 +165,7 @@ python code/verify_release.py
 | `results/review_r7/loso/*` | `review_r7_loso.py` |
 | `results/review_r7/dynprior/*` | `review_r7_dynprior.py` |
 | `results/review_r15_noise_prior/*` | `review_r15_noise_prior.py` |
+| `results/china_forecast.csv` | `w3_china_national.py` (archived run; state sampling unseeded) |
 | `results/review_r7/eu_prior/*` (CSV/JSON summaries) | `eu_prior_sensitivity.py` |
 | `results/review_r7/eu_numeric_audit_r7.json/.csv` | audit of the released EU files (provenance-distinct recomputation) |
 | `results/external_consistency_r7.csv/.json/.npz` | `external_consistency.py` |
