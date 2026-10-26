@@ -107,6 +107,7 @@ python code/w3_china_national_v2c.py
 
 # Two-chain convergence diagnostic for the production run
 python code/review_r5_validation.py base
+python code/review_r5_validation.py omit_bounds   # deletion refit (28 obs, two chains, seed 20261021)
 
 # Matched SBC (~8 min for 32 main replicates; ~4 min for 16 misspecification replicates (archived CPU run))
 python code/sbc_production.py main 32
@@ -115,12 +116,12 @@ python code/sbc_production.py misspec 16
 # China measurement-prior sensitivity (three two-chain arms, ~1 min each)
 python code/review_r7_prior_sensitivity.py
 
-# Censored-likelihood refit, leave-one-source-out, dynamic-prior sensitivity (~2 min total)
+# Censored-likelihood, deletion, LOSO, dynamic-prior, noise-prior and constant-drift comparisons
 python code/review_r7_censored.py
 python code/review_r7_loso.py
 python code/review_r7_dynprior.py
 python code/review_r15_noise_prior.py
-python code/w3_china_national.py   # constant-drift variant (archived: state sampling unseeded)
+python code/w3_china_national.py   # constant-drift variant (archived: state sampling unseeded); reruns write *_rerun.csv (expect the 2030 median within about 0.05 Gt of the archived 4.12; verify_release checks the archived file)
 
 # Deterministic 2024-anchor holdout and same-source consistency check
 python code/external_consistency.py
@@ -166,6 +167,8 @@ python code/verify_release.py
 | `results/review_r7/dynprior/*` | `review_r7_dynprior.py` |
 | `results/review_r15_noise_prior/*` | `review_r15_noise_prior.py` |
 | `results/china_forecast.csv` | `w3_china_national.py` (archived run; state sampling unseeded) |
+| `results/china_hyper_draws_v2c.npy` | `w3_china_national_v2c.py` (production kappa/rho/sigma draws) |
+| `results/review_r5/china_omit_bounds_*` | `review_r5_validation.py omit_bounds` |
 | `results/review_r7/eu_prior/*` (CSV/JSON summaries) | `eu_prior_sensitivity.py` |
 | `results/review_r7/eu_numeric_audit_r7.json/.csv` | audit of the released EU files (provenance-distinct recomputation) |
 | `results/external_consistency_r7.csv/.json/.npz` | `external_consistency.py` |
