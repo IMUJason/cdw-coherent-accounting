@@ -161,8 +161,8 @@ python code/verify_release.py
 | `results/china_source_bias_v2c.csv`, `china_theta_draws_v2c.npy` | `w3_china_national_v2c.py` |
 | `results/china_*_v2s.csv` | `mu0_sensitivity.py` |
 | `results/review_r5/china_base_*.csv/.json` | `review_r5_validation.py base` |
-| `results/review_r7/sbc_main*.csv/.json/.npz/.log` | `sbc_production.py main 32` |
-| `results/review_r7/sbc_misspec*.csv/.json/.npz/.log` | `sbc_production.py misspec 16` |
+| `results/review_r7/sbc_main*.csv/.json/.npz` | `sbc_production.py main 32` |
+| `results/review_r7/sbc_misspec*.csv/.json/.npz` | `sbc_production.py misspec 16` |
 | `results/review_r7/prior/*` (CSV/JSON summaries) | `review_r7_prior_sensitivity.py` |
 | `results/review_r7/censored/*` | `review_r7_censored.py` |
 | `results/review_r7/loso/*` | `review_r7_loso.py` |
