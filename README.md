@@ -95,6 +95,8 @@ is not guaranteed; released CSV/JSON outputs are the reference.
 
 ## How to reproduce
 
+Run the sensitivity scripts in a clean copy of the package, or move the released `results/review_r7/prior/`, `results/review_r7/eu_prior/`, and `results/review_r15_noise_prior/` directories aside first: these scripts refuse to overwrite released outputs. `verify_release.py` validates the archived outputs, not a rerun.
+
 ```bash
 # China observation database (guards included)
 python code/build_china_obs.py

@@ -79,7 +79,7 @@
     "status_at_audit": "incomplete; no completed fit outputs [historical snapshot; superseded by results/review_r7/eu_prior/ (baseline and loc0 arms completed)]",
     "actually_started": "baseline full-panel arm logB_loc=-0.2, NumPyro NUTS, JAX float64, two sequential chains, 600 warmup and 600 retained draws per chain, seed 20261020; process was still present at last status check",
     "not_started": "logB_loc=0 arm (completed; see results/review_r7/eu_prior/loc0_*)",
-    "diagnostics_deltas_metadata": "not available yet; no posterior/diagnostic/metadata result files had been written"
+    "diagnostics_deltas_metadata": "available in results/review_r7/eu_prior/ (run_metadata.json and {baseline,loc0}_diagnostics.csv); not written at the time of the historical audit"
   },
   "limitations": [
     "The 53 pairs span two forecast origins; empirical coverage is descriptive, not independent external validation.",

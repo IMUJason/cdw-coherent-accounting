@@ -115,6 +115,14 @@ def main() -> int:
            abs(c23["median"] - 2.365) < 0.01 and abs(c30["median"] - 2.745) < 0.01,
            f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
 
+    meta_eu = json.loads((RES / "review_r7" / "eu_prior" / "run_metadata.json")
+                         .read_text(encoding="utf-8"))
+    missing_eu = [name for name in meta_eu["output_files"]
+                  if not (RES / "review_r7" / "eu_prior" / name).is_file()]
+    record("eu_prior_output_manifest",
+           not missing_eu,
+           f"missing={missing_eu if missing_eu else 'none'}")
+
     srcs = pd.read_csv(ROOT / "data" / "china" / "china_sources_v01.csv")
     obs_counts = obs.groupby("source_id").size()
     src_counts = srcs.groupby("source_id")["n_obs"].sum()
