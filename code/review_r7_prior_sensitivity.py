@@ -99,11 +99,15 @@ def fit_arm(arm: dict[str, float | int | str], df: pd.DataFrame, theta_ref: floa
     forecast_seed = seed + 20000
     logb_scale = float(arm["logB_scale"])
     offset_scale = float(arm["offset_scale"])
+    log_sd_prior_sd = float(arm.get("log_sd_prior_sd", 0.4))
+    sd_center_multiplier = float(arm.get("sd_center_multiplier", 1.0))
 
     model = cn.make_model(
         df, cn.T,
         logB_scale=logb_scale,
         offset_scale=offset_scale,
+        log_sd_prior_sd=log_sd_prior_sd,
+        sd_center_multiplier=sd_center_multiplier,
     )
     mcmc = MCMC(
         NUTS(model, target_accept_prob=TARGET_ACCEPT),
@@ -268,6 +272,8 @@ def fit_arm(arm: dict[str, float | int | str], df: pd.DataFrame, theta_ref: floa
         "prior_parameters": {
             "logB_scale": logb_scale,
             "offset_scale": offset_scale,
+            "log_sd_prior_sd": log_sd_prior_sd,
+            "sd_center_multiplier": sd_center_multiplier,
             "mu0_scale_unchanged": 0.6,
             "other_model_settings_unchanged": True,
         },

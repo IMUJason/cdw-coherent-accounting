@@ -103,7 +103,7 @@ def theta_posterior(phi, df, T):
 
 def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6,
                logB_scale=0.25, offset_scale=0.4, kappa_sd=0.03,
-               sd_eta_scale=0.12):
+               sd_eta_scale=0.12, log_sd_prior_sd=0.4, sd_center_multiplier=1.0):
     m_arr = df["m"].to_numpy().astype(int)
     t_arr = df["t"].to_numpy().astype(int)
     y_arr = df["y"].to_numpy()
@@ -123,8 +123,8 @@ def make_model(df, T, *, gao_corr=0.0, unit_slopes=False, mu0_scale=0.6,
         b_f = numpyro.sample("b_f", dist.Normal(0.0, offset_scale).expand([M - 1]))
         log_sd_m_free = numpyro.sample(
             "log_sd_m_free",
-            dist.Normal(jnp.log(jnp.array([0.05] + [0.15] * (M - 2))),
-                        0.4).expand([M - 1]))
+            dist.Normal(jnp.log(jnp.array([0.05] + [0.15] * (M - 2)) * sd_center_multiplier),
+                        log_sd_prior_sd).expand([M - 1]))
         # sigma for the digitized WGR series (m=1) is FIXED at 0.07:
         # +-5% digitization error (log-sd .05) plus model discrepancy (.05)
         log_sd_m = jnp.concatenate(

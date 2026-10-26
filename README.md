@@ -34,7 +34,7 @@ code/                            analysis code (run order = pipeline order)
   eu_testbed.py                  EU validation: dual-caliber fit, masked-state recovery, hierarchy audit
   eu_obs_backtest.py             EU rolling-origin backtest, latent and future-observation targets
   w3_eu_forecast.py              EU rolling-origin point forecasts and persistence baseline
-  w3_china_national.py           China constant-drift variant (4.1 Gt 2030 comparison in the text)
+  w3_china_national.py           China constant-drift variant (4.12 Gt 2030 comparison in the text)
   w3_china_national_v2c.py       China production model (AR(1) increments, fixed digitization noise)
   sbc_production.py              matched SBC on the production China design (main 32 / misspec 16)
   review_r5_validation.py        two-chain convergence diagnostic for the production China run
@@ -108,7 +108,7 @@ python code/w3_china_national_v2c.py
 # Two-chain convergence diagnostic for the production run
 python code/review_r5_validation.py base
 
-# Matched SBC (~2 h for 32 main replicates; ~50 min for 16 misspecification replicates)
+# Matched SBC (~8 min for 32 main replicates; ~4 min for 16 misspecification replicates (archived CPU run))
 python code/sbc_production.py main 32
 python code/sbc_production.py misspec 16
 

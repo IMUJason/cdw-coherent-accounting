@@ -115,6 +115,27 @@ def main() -> int:
            abs(c23["median"] - 2.365) < 0.02 and abs(c30["median"] - 2.772) < 0.05,
            f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
 
+    srcs = pd.read_csv(ROOT / "data" / "china" / "china_sources_v01.csv")
+    obs_counts = obs.groupby("source_id").size()
+    src_counts = srcs.groupby("source_id")["n_obs"].sum()
+    record("sources_table_consistent",
+           set(obs["source_id"]).issubset(set(srcs["source_id"]))
+           and int(srcs["n_obs"].sum()) == 58
+           and all(src_counts[sid] == n for sid, n in obs_counts.items()),
+           f"n_obs total={int(srcs['n_obs'].sum())}, per-source match="
+           f"{all(src_counts[sid] == n for sid, n in obs_counts.items())}")
+
+    drift = pd.read_csv(RES / "china_forecast.csv")
+    d2030 = float(drift[drift["year"] == 2030]["median_wt"].iloc[0]) / 1e5
+    record("constant_drift_2030", abs(d2030 - 4.12) < 0.01,
+           f"2030 median={d2030:.3f} Gt")
+
+    noise_run = json.loads((RES / "review_r15_noise_prior" / "noise_wide_run.json")
+                           .read_text(encoding="utf-8"))
+    record("noise_arm_prior_setting",
+           noise_run["prior_parameters"]["log_sd_prior_sd"] == 0.8,
+           f"log_sd_prior_sd={noise_run['prior_parameters']['log_sd_prior_sd']}")
+
     noise = json.loads((RES / "review_r15_noise_prior" / "noise_prior_summary.json")
                        .read_text(encoding="utf-8"))
     record("noise_prior_endpoint_sensitive",

@@ -106,6 +106,26 @@
       "detail": "2023=2.365, 2030=2.772"
     },
     {
+      "check": "sources_table_consistent",
+      "pass": true,
+      "detail": "n_obs total=58, per-source match=True"
+    },
+    {
+      "check": "constant_drift_2030",
+      "pass": true,
+      "detail": "2030 median=4.122 Gt"
+    },
+    {
+      "check": "noise_arm_prior_setting",
+      "pass": true,
+      "detail": "log_sd_prior_sd=0.8"
+    },
+    {
+      "check": "noise_prior_endpoint_sensitive",
+      "pass": true,
+      "detail": "max median change=1.16%, max endpoint change=15.53%"
+    },
+    {
       "check": "dynprior_expected",
       "pass": true,
       "detail": "base=2.79, sigma_wide=2.80, kappa_wide=3.17"
@@ -121,6 +141,6 @@
       "detail": "leaks=none"
     }
   ],
-  "passed": 24,
+  "passed": 28,
   "failed": 0
 }
