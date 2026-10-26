@@ -42,6 +42,7 @@ code/                            analysis code (run order = pipeline order)
   review_r7_censored.py          censored-likelihood refit for the two lower-bound observations
   review_r7_loso.py              leave-one-source-out influence diagnostic
   review_r7_dynprior.py          dynamic-prior sensitivity (kappa sd, sigma_eta scale)
+  review_r15_noise_prior.py      noise-prior sensitivity (log-sd prior sd 0.4 -> 0.8)
   eu_prior_sensitivity.py        EU log-slope prior-location sensitivity (two arms, full panel)
   decision_value_annual.py       annual-loss capacity decision and sensitivity grid
   external_consistency.py        deterministic 2024-anchor holdout + same-source consistency check
@@ -118,6 +119,7 @@ python code/review_r7_prior_sensitivity.py
 python code/review_r7_censored.py
 python code/review_r7_loso.py
 python code/review_r7_dynprior.py
+python code/review_r15_noise_prior.py
 
 # Deterministic 2024-anchor holdout and same-source consistency check
 python code/external_consistency.py
@@ -161,6 +163,7 @@ python code/verify_release.py
 | `results/review_r7/censored/*` | `review_r7_censored.py` |
 | `results/review_r7/loso/*` | `review_r7_loso.py` |
 | `results/review_r7/dynprior/*` | `review_r7_dynprior.py` |
+| `results/review_r15_noise_prior/*` | `review_r15_noise_prior.py` |
 | `results/review_r7/eu_prior/*` (CSV/JSON summaries) | `eu_prior_sensitivity.py` |
 | `results/review_r7/eu_numeric_audit_r7.json/.csv` | audit of the released EU files (provenance-distinct recomputation) |
 | `results/external_consistency_r7.csv/.json/.npz` | `external_consistency.py` |

@@ -53,6 +53,8 @@ def main() -> int:
 
     fut = np.load(RES / "china_forecast_draws_v2c.npy")
     Gy = fut[1:6, :] / 1e5
+    # illustrative scenario values for the capacity example; not a claim
+    # about any specific facility
     capex, cap_t = 4186.76e4, 17.52e4
     crf = 0.08 * 1.08 ** 20 / (1.08 ** 20 - 1)
     k = capex / cap_t * crf
@@ -112,6 +114,15 @@ def main() -> int:
     record("censored_close_to_production",
            abs(c23["median"] - 2.365) < 0.02 and abs(c30["median"] - 2.772) < 0.05,
            f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
+
+    noise = json.loads((RES / "review_r15_noise_prior" / "noise_prior_summary.json")
+                       .read_text(encoding="utf-8"))
+    record("noise_prior_endpoint_sensitive",
+           abs(noise["max_abs_endpoint_pct_change"] - 15.53) < 0.05
+           and noise["max_abs_median_pct_change"] < 1.2
+           and noise["run"]["divergences_total"] == 0,
+           f"max median change={noise['max_abs_median_pct_change']:.2f}%, "
+           f"max endpoint change={noise['max_abs_endpoint_pct_change']:.2f}%")
 
     dyn = pd.read_csv(RES / "review_r7" / "dynprior" / "dynprior_summary.csv")
     base30 = dyn[dyn["arm"] == "base"].iloc[0]["y2030_median"]

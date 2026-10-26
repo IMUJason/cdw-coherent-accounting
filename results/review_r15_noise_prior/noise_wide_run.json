@@ -1,0 +1,69 @@
+{
+  "arm": "noise_wide",
+  "prior_parameters": {
+    "logB_scale": 0.25,
+    "offset_scale": 0.4,
+    "log_sd_prior_sd": 0.8,
+    "sd_center_multiplier": 1.0,
+    "mu0_scale_unchanged": 0.6,
+    "other_model_settings_unchanged": true
+  },
+  "sampler": {
+    "chains": 2,
+    "chain_method": "sequential",
+    "warmup_per_chain": 800,
+    "retained_per_chain": 1000,
+    "target_accept": 0.95,
+    "seed": 20261023,
+    "float64_enabled": true
+  },
+  "derived_random_seeds": {
+    "conditional_state_draws": 20271023,
+    "forecast_paths": 20281023
+  },
+  "reference": {
+    "theta_ref": 11.640199566081748,
+    "theta_ref_definition": "float64 mean of every value in production results/china_theta_draws_v2c.npy",
+    "theta_ref_file": "results/china_theta_draws_v2c.npy",
+    "ratio_formula": "exp((exp(logB)-1)*theta_ref+b)"
+  },
+  "observations": 30,
+  "forecast_paths_per_posterior_draw": 20,
+  "forecast_path_count": 40000,
+  "divergences_total": 0,
+  "divergences_by_chain": [
+    0,
+    0
+  ],
+  "max_r_hat": 1.0036956786328877,
+  "min_ess": 927.6890714573381,
+  "runtime_seconds": 23.063000000081956,
+  "key_years_Gt": {
+    "2023": [
+      2.3752429974205063,
+      2.1507995911774307,
+      2.5640038942917927
+    ],
+    "2024": [
+      2.343526009951839,
+      2.178327215416513,
+      2.5813631788631164
+    ],
+    "2030": [
+      2.7348049063569,
+      1.441850427505974,
+      4.86645504516135
+    ]
+  },
+  "jax_version": "0.6.2",
+  "numpyro_version": "0.19.0",
+  "numpy_version": "2.2.6",
+  "theta_draws_file_shape": [
+    25,
+    2000
+  ],
+  "forecast_draws_file_shape": [
+    6,
+    40000
+  ]
+}

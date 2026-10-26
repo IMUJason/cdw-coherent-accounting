@@ -28,6 +28,9 @@ fut = np.load(RES / "china_forecast_draws_v2c.npy")     # 10^4 t, 2025..2030
 Gy = fut[1:6, :] / 1e5                                   # Gt/yr, 2026..2030
 n_draws = Gy.shape[1]
 
+# Illustrative scenario values for the capacity example (239 CNY per tonne
+# of installed capacity, annualized at 8% over 20 years -> 24.3 CNY/t/yr).
+# Scenario assumption, not a claim about any specific facility.
 CAPEX_CNY = 4186.76e4
 CAP_T = 17.52e4
 CRF = 0.08 * 1.08**20 / (1.08**20 - 1)

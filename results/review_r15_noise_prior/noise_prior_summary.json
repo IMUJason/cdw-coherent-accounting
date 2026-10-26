@@ -1,0 +1,188 @@
+{
+  "arm": "noise_wide",
+  "change": "log_sd_m prior standard deviation doubled from 0.4 to 0.8; centers and all other settings unchanged",
+  "comparison_base": "archived base arm from results/review_r7/prior",
+  "max_abs_median_pct_change": 1.1556298285322453,
+  "max_abs_endpoint_pct_change": 15.529894505902742,
+  "source_ratios": [
+    {
+      "source": "gao_2025",
+      "base_median": 0.9891828371530716,
+      "noise_wide_median": 0.9792401371404548,
+      "pct_change_median": -1.005142794554803,
+      "base_p05": 0.8317574803861438,
+      "noise_wide_p05": 0.8284033923928362,
+      "pct_change_p05": -0.4032531203386869,
+      "base_p95": 1.1690139510208364,
+      "noise_wide_p95": 1.1771205591155909,
+      "pct_change_p95": 0.6934569162049264
+    },
+    {
+      "source": "wang_2022",
+      "base_median": 1.0307897449200625,
+      "noise_wide_median": 1.0188776311583148,
+      "pct_change_median": -1.1556298285322453,
+      "base_p05": 0.7541039394548601,
+      "noise_wide_p05": 0.7054690706340773,
+      "pct_change_p05": -6.449358805357896,
+      "base_p95": 1.4003748925245965,
+      "noise_wide_p95": 1.4755147345631807,
+      "pct_change_p95": 5.3656947464348015
+    },
+    {
+      "source": "zheng_2017",
+      "base_median": 2.80836689412559,
+      "noise_wide_median": 2.80148635329357,
+      "pct_change_median": -0.2450014934448963,
+      "base_p05": 1.9957908882854272,
+      "noise_wide_p05": 1.6858466687762812,
+      "pct_change_p05": -15.529894505902742,
+      "base_p95": 3.9944177876850415,
+      "noise_wide_p95": 4.2887781302596375,
+      "pct_change_p95": 7.369292803625127
+    },
+    {
+      "source": "envirunion_2017",
+      "base_median": 0.7830570773921302,
+      "noise_wide_median": 0.7841892110036567,
+      "pct_change_median": 0.14457868324195822,
+      "base_p05": 0.570504683289572,
+      "noise_wide_p05": 0.5073619669034812,
+      "pct_change_p05": -11.067869946659382,
+      "base_p95": 1.1109341848958656,
+      "noise_wide_p95": 1.1945031864602302,
+      "pct_change_p95": 7.522407960845867
+    },
+    {
+      "source": "mee_draft_2025",
+      "base_median": 1.2567671893518648,
+      "noise_wide_median": 1.2469825482976973,
+      "pct_change_median": -0.778556373612338,
+      "base_p05": 0.935859247035873,
+      "noise_wide_p05": 0.8436998349344088,
+      "pct_change_p05": -9.847571885767936,
+      "base_p95": 1.6650471863407688,
+      "noise_wide_p95": 1.7543586462905147,
+      "pct_change_p95": 5.363899634942082
+    },
+    {
+      "source": "cdw_alliance",
+      "base_median": 0.8247731426827789,
+      "noise_wide_median": 0.819722937071324,
+      "pct_change_median": -0.6123145080873749,
+      "base_p05": 0.592030183344109,
+      "noise_wide_p05": 0.546003834731291,
+      "pct_change_p05": -7.774324672575994,
+      "base_p95": 1.1551295662312655,
+      "noise_wide_p95": 1.230280543596621,
+      "pct_change_p95": 6.505848310206774
+    }
+  ],
+  "key_years": {
+    "2023": {
+      "base": [
+        2.361964080469497,
+        2.1795705221721478,
+        2.5293442733725744
+      ],
+      "noise_wide": [
+        2.3752429974205063,
+        2.1507995911774307,
+        2.5640038942917927
+      ]
+    },
+    "2024": {
+      "base": [
+        2.356333401254336,
+        2.201911810304579,
+        2.560343016457574
+      ],
+      "noise_wide": [
+        2.343526009951839,
+        2.178327215416513,
+        2.5813631788631164
+      ]
+    },
+    "2030": {
+      "base": [
+        2.7867525228947336,
+        1.4465179990556771,
+        4.900071274698783
+      ],
+      "noise_wide": [
+        2.7348049063569,
+        1.441850427505974,
+        4.86645504516135
+      ]
+    }
+  },
+  "run": {
+    "arm": "noise_wide",
+    "prior_parameters": {
+      "logB_scale": 0.25,
+      "offset_scale": 0.4,
+      "log_sd_prior_sd": 0.8,
+      "sd_center_multiplier": 1.0,
+      "mu0_scale_unchanged": 0.6,
+      "other_model_settings_unchanged": true
+    },
+    "sampler": {
+      "chains": 2,
+      "chain_method": "sequential",
+      "warmup_per_chain": 800,
+      "retained_per_chain": 1000,
+      "target_accept": 0.95,
+      "seed": 20261023,
+      "float64_enabled": true
+    },
+    "derived_random_seeds": {
+      "conditional_state_draws": 20271023,
+      "forecast_paths": 20281023
+    },
+    "reference": {
+      "theta_ref": 11.640199566081748,
+      "theta_ref_definition": "float64 mean of every value in production results/china_theta_draws_v2c.npy",
+      "theta_ref_file": "results/china_theta_draws_v2c.npy",
+      "ratio_formula": "exp((exp(logB)-1)*theta_ref+b)"
+    },
+    "observations": 30,
+    "forecast_paths_per_posterior_draw": 20,
+    "forecast_path_count": 40000,
+    "divergences_total": 0,
+    "divergences_by_chain": [
+      0,
+      0
+    ],
+    "max_r_hat": 1.0036956786328877,
+    "min_ess": 927.6890714573381,
+    "runtime_seconds": 23.063000000081956,
+    "key_years_Gt": {
+      "2023": [
+        2.3752429974205063,
+        2.1507995911774307,
+        2.5640038942917927
+      ],
+      "2024": [
+        2.343526009951839,
+        2.178327215416513,
+        2.5813631788631164
+      ],
+      "2030": [
+        2.7348049063569,
+        1.441850427505974,
+        4.86645504516135
+      ]
+    },
+    "jax_version": "0.6.2",
+    "numpyro_version": "0.19.0",
+    "numpy_version": "2.2.6",
+    "theta_draws_file_shape": [
+      25,
+      2000
+    ],
+    "forecast_draws_file_shape": [
+      6,
+      40000
+    ]
+  }
+}
