@@ -27,7 +27,8 @@ from numpyro.infer import MCMC, NUTS
 
 numpyro.set_host_device_count(2)
 ROOT = Path(__file__).resolve().parents[1]
-RES = ROOT / "results"
+RES = ROOT / "results" / "constant_drift"
+RES.mkdir(parents=True, exist_ok=True)
 YEARS = list(range(2000, 2025))
 T = len(YEARS)
 
@@ -127,14 +128,6 @@ def make_model(df, T):
     return model
 
 
-def out_name(base: str) -> str:
-    """Never overwrite archived results; reruns write *_rerun.csv."""
-    if (RES / base).exists():
-        stem, suffix = base.rsplit(".", 1)
-        return f"{stem}_rerun.{suffix}"
-    return base
-
-
 def main():
     df = load_obs()
     M = len(FIT_SOURCES)
@@ -166,7 +159,7 @@ def main():
                          "lo90_wt": np.exp(lo), "hi90_wt": np.exp(hi)})
     post[["median_wt", "lo90_wt", "hi90_wt"]] = post[
         ["median_wt", "lo90_wt", "hi90_wt"]].round(0)
-    post.to_csv(RES / out_name("china_national_posterior.csv"), index=False, encoding="utf-8-sig")
+    post.to_csv(RES / "china_national_posterior.csv", index=False, encoding="utf-8-sig")
     print(post.to_string(index=False))
 
     # source bias table
@@ -182,7 +175,7 @@ def main():
             ratio_hi=float(np.exp(np.quantile(r_m[:, mi], .95))),
             sd_median=float(np.median(np.exp(np.asarray(smp["log_sd_m"])[:, mi])))))
     sb = pd.DataFrame(rows)
-    sb.to_csv(RES / out_name("china_source_bias.csv"), index=False, encoding="utf-8-sig")
+    sb.to_csv(RES / "china_source_bias.csv", index=False, encoding="utf-8-sig")
     print("\nsource bias:"); print(sb.round(3).to_string(index=False))
 
     # compatibility with lower-bound claims
@@ -209,9 +202,9 @@ def main():
     fc = pd.DataFrame({"year": list(range(2025, 2031)),
                        "median_wt": np.exp(fm), "lo90_wt": np.exp(flo),
                        "hi90_wt": np.exp(fhi)}).round(0)
-    fc.to_csv(RES / out_name("china_forecast.csv"), index=False, encoding="utf-8-sig")
+    fc.to_csv(RES / "china_forecast.csv", index=False, encoding="utf-8-sig")
     print("\nforecast:"); print(fc.to_string(index=False))
-    np.save(RES / out_name("china_theta_draws.npy"), draws)
+    np.save(RES / "china_theta_draws.npy", draws)
     print("\nsaved results/china_*")
 
 

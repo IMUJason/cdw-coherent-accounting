@@ -101,9 +101,11 @@ def build_model(df_exact: pd.DataFrame, df_cens: pd.DataFrame, T: int):
         cross = H_c @ cov_theta @ H.T
         resid = y_arr - mean_y
         solve_ee = jnp.linalg.solve(cov_y, cross.T)
-        m_cond = m_c0 + jnp.diag(cross @ solve_ee)
+        m_cond = m_c0 + cross @ jnp.linalg.solve(cov_y, resid)
         v_c0 = (coef[cm] ** 2) * jnp.diag(cov_theta)[ct] + sd_m[cm] ** 2
         v_cond = v_c0 - jnp.diag(cross @ solve_ee)
+        # The two bounds enter as independent conditional one-dimensional
+        # tails; their conditional cross-covariance is neglected.
         numpyro.factor("censored_bounds",
                        jnp.sum(log_ndtr((m_cond - jnp.asarray(cbound)) / jnp.sqrt(v_cond))))
 

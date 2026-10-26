@@ -112,7 +112,7 @@ def main() -> int:
     c23 = cens[(cens["scope"] == "posterior") & (cens["year"] == 2023)].iloc[0]
     c30 = cens[(cens["scope"] == "forecast") & (cens["year"] == 2030)].iloc[0]
     record("censored_close_to_production",
-           abs(c23["median"] - 2.365) < 0.02 and abs(c30["median"] - 2.772) < 0.05,
+           abs(c23["median"] - 2.365) < 0.01 and abs(c30["median"] - 2.745) < 0.01,
            f"2023={c23['median']:.3f}, 2030={c30['median']:.3f}")
 
     srcs = pd.read_csv(ROOT / "data" / "china" / "china_sources_v01.csv")

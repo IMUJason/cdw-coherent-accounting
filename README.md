@@ -89,7 +89,7 @@ matplotlib
 pymupdf       # only for digitize_gao_fig3.py
 ```
 
-CPU only. All released runs fix their seeds and enable JAX float64.
+CPU only. Diagnostic and sensitivity scripts enable JAX float64; the archived production, constant-drift and EU runs used the JAX default (float32 for sampled hyperparameters). All runs fix their seeds except the constant-drift state sampling (see below).
 Exact floating-point reproduction across JAX/NumPyro versions or platforms
 is not guaranteed; released CSV/JSON outputs are the reference.
 
@@ -121,7 +121,7 @@ python code/review_r7_censored.py
 python code/review_r7_loso.py
 python code/review_r7_dynprior.py
 python code/review_r15_noise_prior.py
-python code/w3_china_national.py   # constant-drift variant (archived: state sampling unseeded); reruns write *_rerun.csv (expect the 2030 median within about 0.05 Gt of the archived 4.12; verify_release checks the archived file)
+python code/w3_china_national.py   # constant-drift variant (archived: state sampling unseeded); reruns write results/constant_drift/* (expect the 2030 median within about 0.05 Gt of the archived 4.12; verify_release checks the archived file)
 
 # Deterministic 2024-anchor holdout and same-source consistency check
 python code/external_consistency.py

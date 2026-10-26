@@ -103,7 +103,7 @@
     {
       "check": "censored_close_to_production",
       "pass": true,
-      "detail": "2023=2.365, 2030=2.772"
+      "detail": "2023=2.365, 2030=2.745"
     },
     {
       "check": "sources_table_consistent",
